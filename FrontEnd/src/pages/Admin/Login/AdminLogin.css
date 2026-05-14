@@ -1,0 +1,44 @@
+.admin-login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+}
+.admin-login-page .glass-card {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.admin-login-page .card-title {
+  color: #1e293b;
+}
+
+.admin-login-page .card-subtitle {
+  color: #64748b;
+}
+
+.admin-login-page .form-label {
+  color: #475569;
+}
+
+.admin-login-page .form-input {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.admin-login-page .form-input:focus {
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.admin-login-page .btn-primary {
+  background: #2563eb;
+}
+
+.admin-login-page .btn-primary:hover {
+  background: #1d4ed8;
+}
