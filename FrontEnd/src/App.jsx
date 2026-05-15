@@ -5,7 +5,10 @@ import { ToastContainer } from 'react-toastify';
 import Navbar from './pages/Users/Navbar/Navbar';
 import Login from './pages/Users/Login/Login';
 import Register from './pages/Users/Register/Register';
-import Dashboard from './pages/Users/Dashboard/Dashboard';
+import Tasks from './pages/Users/Tasks/Tasks';
+import Attendance from './pages/Users/Attendance/Attendance';
+import Leaves from './pages/Users/Leaves/Leaves';
+import Profile from './pages/Users/Profile/Profile';
 import ForgotPassword from './pages/Users/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/Users/ResetPassword/ResetPassword';
 import Loading from './components/Loading/Loading';
@@ -33,7 +36,6 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
-  // Scroll to top on every navigation to simulate a fresh page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
@@ -50,11 +52,17 @@ export default function App() {
         <Routes>
           <Route path="/" element={
             user ? (
-              user.isAdmin ? <Navigate to="/admin" replace /> : <Dashboard user={user} />
+              user.isAdmin ? <Navigate to="/admin" replace /> : <Tasks user={user} />
             ) : (
               <Navigate to="/login" replace />
             )
           } />
+          
+          <Route path="/tasks" element={user ? <Tasks user={user} /> : <Navigate to="/login" replace />} />
+          <Route path="/attendance" element={user ? <Attendance user={user} /> : <Navigate to="/login" replace />} />
+          <Route path="/leaves" element={user ? <Leaves user={user} /> : <Navigate to="/login" replace />} />
+          <Route path="/profile" element={user ? <Profile user={user} /> : <Navigate to="/login" replace />} />
+         
           <Route path="/admin" element={
             user && user.isAdmin ? (
               <AdminDashboard user={user} />
@@ -62,6 +70,7 @@ export default function App() {
               <Navigate to={user ? "/" : "/admin/login"} />
             )
           } />
+          
           <Route path="/login" element={!user ? <Login setUser={setUser} /> : <Navigate to="/" />} />
           <Route path="/admin/login" element={
             !user ? (

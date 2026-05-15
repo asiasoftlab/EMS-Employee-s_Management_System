@@ -45,65 +45,67 @@ export default function Login({ setUser }) {
   };
 
   return (
-    <div className="glass-card">
-      <h1 className="card-title">Welcome Back</h1>
-      <p className="card-subtitle">Sign in to your EMS account</p>
+    <div className="auth-page-wrapper">
+      <div className="glass-card">
+        <h1 className="card-title">Welcome Back</h1>
+        <p className="card-subtitle">Sign in to your EMS account</p>
 
-      <form onSubmit={handleLogin}>
-        <div className="form-group">
-          <label className="form-label">Email Address</label>
-          <input
-            type="email"
-            className="form-input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            placeholder="Enter your email address"
-          />
-        </div>
-        <div className="form-group">
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <label className="form-label" style={{ marginBottom: 0 }}>Password</label>
-            <Link to="/forgot-password" style={{ color: 'var(--primary)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Forgot Password?</Link>
-          </div>
-          <div style={{ position: 'relative' }}>
+        <form onSubmit={handleLogin}>
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
             <input
-              type={showPassword ? "text" : "password"}
+              type="email"
               className="form-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="Enter your password"
-              style={{ paddingRight: '2.5rem' }}
+              placeholder="Enter your email address"
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                padding: 0
-              }}
-            >
-              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-            </button>
           </div>
-        </div>
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? 'Signing In...' : 'Sign In'}
-        </button>
-      </form>
+          <div className="form-group">
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>Password</label>
+              <Link to="/forgot-password" style={{ color: 'var(--primary)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Forgot Password?</Link>
+            </div>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                className="form-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="Enter your password"
+                style={{ paddingRight: '2.5rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: 0
+                }}
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+          </div>
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? 'Signing In...' : 'Sign In'}
+          </button>
+        </form>
 
-      <div className="form-footer">
-        Don't have an account? <Link to="/register" className="form-link">Register</Link>
+        <div className="form-footer">
+          Don't have an account? <Link to="/register" className="form-link">Register</Link>
+        </div>
       </div>
     </div>
   );

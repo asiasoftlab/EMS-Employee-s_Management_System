@@ -62,57 +62,59 @@ export default function Register({ setUser }) {
   };
 
   return (
-    <div className="glass-card">
-      <h1 className="card-title">Create Account</h1>
-      <p className="card-subtitle">Join the Employee Management System (EMS)</p>
-      
-      <form onSubmit={handleRegister}>
-        <div className="form-group">
-          <label className="form-label">Full Name</label>
-          <input type="text" name="name" className="form-input" value={formData.name} onChange={handleChange} required placeholder="Enter your full name"/>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Email Address</label>
-          <input type="email" name="email" className="form-input" value={formData.email} onChange={handleChange} required placeholder="Enter your email"/>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Mobile Number</label>
-          <input type="tel" name="phone" className="form-input" value={formData.phone} onChange={handleChange} required placeholder="Enter your mobile number"/>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Password</label>
-          <div style={{ position: 'relative' }}>
-            <input type={showPassword ? "text" : "password"} name="password" className="form-input" value={formData.password} onChange={handleChange} required placeholder="Enter your password" style={{ paddingRight: '2.5rem' }}/>
-            <button type="button" onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                padding: 0
-              }}
-            >
-              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-            </button>
+    <div className="auth-page-wrapper">
+      <div className="glass-card">
+        <h1 className="card-title">Create Account</h1>
+        <p className="card-subtitle">Join the Employee Management System (EMS)</p>
+        
+        <form onSubmit={handleRegister}>
+          <div className="form-group">
+            <label className="form-label">Full Name</label>
+            <input type="text" name="name" className="form-input" value={formData.name} onChange={handleChange} required placeholder="Enter your full name"/>
           </div>
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <input type="email" name="email" className="form-input" value={formData.email} onChange={handleChange} required placeholder="Enter your email"/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Mobile Number</label>
+            <input type="tel" name="phone" className="form-input" value={formData.phone} onChange={handleChange} required placeholder="Enter your mobile number"/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <div style={{ position: 'relative' }}>
+              <input type={showPassword ? "text" : "password"} name="password" className="form-input" value={formData.password} onChange={handleChange} required placeholder="Enter your password" style={{ paddingRight: '2.5rem' }}/>
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: 0
+                }}
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Department</label>
+            <input type="text" name="department" className="form-input" value={formData.department} onChange={handleChange} />
+          </div>
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? 'Creating Account...' : 'Create Account'}
+          </button>
+        </form>
+        
+        <div className="form-footer">
+          Already have an account? <Link to="/login" className="form-link">Sign In</Link>
         </div>
-        <div className="form-group">
-          <label className="form-label">Department</label>
-          <input type="text" name="department" className="form-input" value={formData.department} onChange={handleChange} />
-        </div>
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? 'Creating Account...' : 'Create Account'}
-        </button>
-      </form>
-      
-      <div className="form-footer">
-        Already have an account? <Link to="/login" className="form-link">Sign In</Link>
       </div>
     </div>
   );
