@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from '../../../config/axiosConfig';
+import Clock from '../../../components/Clock/Clock';
 import './Navbar.css';
 
 export default function Navbar({ user, setUser }) {
@@ -42,7 +43,7 @@ export default function Navbar({ user, setUser }) {
             }}>Sign Up</Link>
           </>
         )}
-
+        <Clock />
       </div>
     </nav>
   );
