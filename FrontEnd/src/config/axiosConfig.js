@@ -1,9 +1,11 @@
 import axios from 'axios';
 
-axios.defaults.baseURL = 'http://localhost:5000';
-axios.defaults.withCredentials = true;
+const API = axios.create({
+  baseURL: 'http://127.0.0.1:5000',
+  withCredentials: true,
+});
 
-axios.interceptors.request.use((config) => {
+API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -11,4 +13,4 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
-export default axios;
+export default API;

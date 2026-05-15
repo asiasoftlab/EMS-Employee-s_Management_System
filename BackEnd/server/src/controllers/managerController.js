@@ -21,11 +21,9 @@ export const getEmployees = asyncHandler(async (req, res) => {
 // @route   GET /api/manager/tasks
 // @access  Private (Manager only)
 export const getAllTasks = asyncHandler(async (req, res) => {
-  // Fetch tasks
   const tasksSnapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get();
   const tasks = [];
-  
-  // We need to fetch user details to mimic 'populate'
+
   const userIds = new Set();
   tasksSnapshot.forEach(doc => {
     const data = doc.data();

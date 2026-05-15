@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 
 import Navbar from './pages/Users/Navbar/Navbar';
@@ -31,45 +31,50 @@ const NavWrapper = ({ user, setUser }) => {
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+
+  // Scroll to top on every navigation to simulate a fresh page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   if (loading) {
     return <Loading setUser={setUser} setLoading={setLoading} />;
   }
+
   return (
-    <BrowserRouter>
-      <div className="app-container">
-        <ToastContainer theme="light" position="bottom-right" autoClose={2000} />
-        <NavWrapper user={user} setUser={setUser} />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={
-              user ? (
-                user.isAdmin ? <Navigate to="/admin" replace /> : <Dashboard user={user} />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            } />
-            <Route path="/admin" element={
-              user && user.isAdmin ? (
-                <AdminDashboard user={user} />
-              ) : (
-                <Navigate to={user ? "/" : "/admin/login"} />
-              )
-            } />
-            <Route path="/login" element={!user ? <Login setUser={setUser} /> : <Navigate to="/" />} />
-            <Route path="/admin/login" element={
-              !user ? (
-                <AdminLogin setUser={setUser} />
-              ) : (
-                <Navigate to={user.isAdmin ? "/admin" : "/"} />
-              )
-            } />
-            <Route path="/register" element={!user ? <Register setUser={setUser} /> : <Navigate to="/" />} />
-            <Route path="/forgot-password" element={!user ? <ForgotPassword /> : <Navigate to="/" />} />
-            <Route path="/reset-password" element={!user ? <ResetPassword /> : <Navigate to="/" />} />
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+    <div className="app-container">
+      <ToastContainer theme="light" position="bottom-right" autoClose={2000} />
+      <NavWrapper user={user} setUser={setUser} />
+      <main className="main-content" key={location.pathname}>
+        <Routes>
+          <Route path="/" element={
+            user ? (
+              user.isAdmin ? <Navigate to="/admin" replace /> : <Dashboard user={user} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } />
+          <Route path="/admin" element={
+            user && user.isAdmin ? (
+              <AdminDashboard user={user} />
+            ) : (
+              <Navigate to={user ? "/" : "/admin/login"} />
+            )
+          } />
+          <Route path="/login" element={!user ? <Login setUser={setUser} /> : <Navigate to="/" />} />
+          <Route path="/admin/login" element={
+            !user ? (
+              <AdminLogin setUser={setUser} />
+            ) : (
+              <Navigate to={user.isAdmin ? "/admin" : "/"} />
+            )
+          } />
+          <Route path="/register" element={!user ? <Register setUser={setUser} /> : <Navigate to="/" />} />
+          <Route path="/forgot-password" element={!user ? <ForgotPassword /> : <Navigate to="/" />} />
+          <Route path="/reset-password" element={!user ? <ResetPassword /> : <Navigate to="/" />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
