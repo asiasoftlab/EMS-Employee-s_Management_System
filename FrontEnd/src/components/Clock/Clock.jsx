@@ -80,8 +80,8 @@ export default function Clock() {
 
               <div className="stats-grid">
                 <div className="stat-item">
-                  <span className="stat-label">Sync Status</span>
-                  <span className="stat-value pulse">Real-time</span>
+                  <span className="stat-label">Status</span>
+                  <span className="stat-value pulse">Online</span>
                 </div>
                 <div className="stat-item">
                   <span className="stat-label">Timezone</span>
