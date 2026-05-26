@@ -9,6 +9,8 @@ import { notFound, errorHandler } from './src/middleware/errorMiddleware.js';
 import authRoutes from './src/routes/authRoutes.js';
 import taskRoutes from './src/routes/taskRoutes.js';
 import managerRoutes from './src/routes/managerRoutes.js';
+import notificationRoutes from './src/routes/notificationRoutes.js';
+import chatRoutes from './src/routes/chatRoutes.js';
 
 dotenv.config({ quiet: true });
 
@@ -27,6 +29,8 @@ app.use(cors({
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/manager', managerRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Root route
 app.get('/', (req, res) => {

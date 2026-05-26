@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sidebar, NotificationPanel } from '../../../components/UserLayout/LayoutComponents';
+import { Sidebar, ChatPanel } from '../../../components/UserLayout/LayoutComponents';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit3, Trash2, Eye, Calendar, Check, X, Inbox, FolderLock } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -7,46 +7,61 @@ import axios from '../../../config/axiosConfig';
 import './Tasks.css';
 
 export default function Tasks({ user }) {
-  
-  const [localTasks, setLocalTasks] = useState([]);
 
+  const [localTasks, setLocalTasks] = useState([]);
   const formatTaskTitle = (dateStr) => {
     if (!dateStr) return 'No Date Assigned';
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return `Schedule: ${dateStr}`;
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
-  // Simulated Hydration/Loading state
   const [isLoading, setIsLoading] = useState(true);
-
-
-  // Modals & CRUD active state
-  const [activeModal, setActiveModal] = useState(null); // 'create' | 'edit' | 'view' | null
+  const [activeModal, setActiveModal] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
   const [taskToDelete, setTaskToDelete] = useState(null);
-
-  // Form Field inputs state
   const [formStatus, setFormStatus] = useState('Pending');
+  const [formTitle, setFormTitle] = useState('');
+  const [formLocation, setFormLocation] = useState('');
   const [formDueDate, setFormDueDate] = useState('');
   const [formNotes, setFormNotes] = useState('');
   const [formSubtasks, setFormSubtasks] = useState([]);
   const [newSubtaskText, setNewSubtaskText] = useState('');
 
-  // Hydrate loader & Fetch tasks from Firebase Firestore
   useEffect(() => {
+    const parseDeadline = (deadlineVal) => {
+      if (!deadlineVal) return '';
+      if (typeof deadlineVal === 'object') {
+        const secs = deadlineVal._seconds !== undefined ? deadlineVal._seconds : deadlineVal.seconds;
+        if (secs !== undefined) {
+          return new Date(secs * 1000).toISOString().split('T')[0];
+        }
+      }
+      try {
+        const date = new Date(deadlineVal);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split('T')[0];
+        }
+      } catch (e) {
+        console.error("Failed to parse deadline", e);
+      }
+      return '';
+    };
+
     const fetchTasks = async () => {
       try {
         const { data } = await axios.get('/api/tasks');
         const mappedTasks = (data || []).map(t => ({
           id: t._id,
           _id: t._id,
-          dueDate: t.deadline ? new Date(t.deadline).toISOString().split('T')[0] : '',
+          title: t.title || '',
+          location: t.location || '',
+          dueDate: parseDeadline(t.deadline),
           status: t.status || 'Pending',
           notes: t.notes || t.description || '',
           completed: t.status === 'Completed',
@@ -55,7 +70,7 @@ export default function Tasks({ user }) {
         setLocalTasks(mappedTasks);
       } catch (err) {
         console.error(err);
-        toast.error('Failed to retrieve tasks from server');
+        toast.error('Failed to retrieve tasks');
       } finally {
         setIsLoading(false);
       }
@@ -69,6 +84,8 @@ export default function Tasks({ user }) {
   if (!user) return null;
   const triggerCreateModal = () => {
     setFormStatus('Pending');
+    setFormTitle('');
+    setFormLocation('');
     setFormDueDate(new Date().toISOString().split('T')[0]);
     setFormNotes('');
     setFormSubtasks([]);
@@ -80,6 +97,8 @@ export default function Tasks({ user }) {
   const triggerEditModal = (task) => {
     setSelectedTask(task);
     setFormStatus(task.status);
+    setFormTitle(task.title || '');
+    setFormLocation(task.location || '');
     setFormDueDate(task.dueDate || '');
     setFormNotes(task.notes || '');
     setFormSubtasks(task.subtasks || []);
@@ -94,10 +113,32 @@ export default function Tasks({ user }) {
 
   const handleSaveTask = async (e, shouldClose = true) => {
     if (e) e.preventDefault();
-    if (!formDueDate) return toast.error('Task date is required');
+
+    if (!formTitle || !formTitle.trim()) {
+      return toast.error('Task title is required');
+    }
+    if (!formLocation || !formLocation.trim()) {
+      return toast.error('Location is required');
+    }
+    if (!formStatus) {
+      return toast.error('Status state is required');
+    }
+    if (!formDueDate) {
+      return toast.error('Due date deadline is required');
+    }
+
+    const tasksOnDate = localTasks.filter(t => t && t.dueDate === formDueDate);
+    const isExceedingLimit = activeModal === 'create'
+      ? tasksOnDate.length >= 9
+      : tasksOnDate.length >= 9 && selectedTask?.dueDate !== formDueDate;
+
+    if (isExceedingLimit) {
+      return toast.error('Maximum limit of 9 tasks per day reached');
+    }
 
     const payload = {
-      title: formatTaskTitle(formDueDate),
+      title: formTitle.trim() || formatTaskTitle(formDueDate),
+      location: formLocation.trim(),
       description: formNotes.trim() || 'Daily Checklist',
       deadline: formDueDate,
       status: formStatus,
@@ -111,6 +152,8 @@ export default function Tasks({ user }) {
         const newTask = {
           id: data._id,
           _id: data._id,
+          title: formTitle.trim() || formatTaskTitle(formDueDate),
+          location: formLocation.trim(),
           dueDate: formDueDate,
           status: formStatus,
           notes: formNotes.trim(),
@@ -118,14 +161,15 @@ export default function Tasks({ user }) {
           subtasks: formSubtasks
         };
 
-        setLocalTasks([newTask, ...localTasks]);
-        toast.success('Task synced with Firebase!');
+        setLocalTasks(prev => [newTask, ...prev]);
+        toast.success('Task Created successfully!');
 
         if (shouldClose) {
           setActiveModal(null);
         } else {
-          // Continuous creation resets form while keeping modal open!
           setFormStatus('Pending');
+          setFormTitle('');
+          setFormLocation('');
           setFormDueDate(new Date().toISOString().split('T')[0]);
           setFormNotes('');
           setFormSubtasks([]);
@@ -134,15 +178,17 @@ export default function Tasks({ user }) {
         }
       } else if (activeModal === 'edit' && selectedTask) {
         await axios.put(`/api/tasks/${selectedTask._id}`, payload);
-        setLocalTasks(localTasks.map(t => t && t.id === selectedTask.id ? {
+        setLocalTasks(prev => prev.map(t => t && t.id === selectedTask.id ? {
           ...t,
+          title: formTitle.trim() || formatTaskTitle(formDueDate),
+          location: formLocation.trim(),
           status: formStatus,
           dueDate: formDueDate,
           notes: formNotes.trim(),
           completed: formStatus === 'Completed',
           subtasks: formSubtasks
         } : t));
-        toast.success('Task updated in Firebase!');
+        toast.success('Task Updated Successfully!');
         setActiveModal(null);
       }
     } catch (err) {
@@ -151,12 +197,9 @@ export default function Tasks({ user }) {
     }
   };
 
-  // Delete handler trigger
   const handleDeleteTask = (id) => {
     setTaskToDelete(id);
   };
-
-  // Instant Checkbox Completion toggle
   const handleToggleComplete = async (id) => {
     const task = localTasks.find(t => t && t.id === id);
     if (!task) return;
@@ -175,7 +218,7 @@ export default function Tasks({ user }) {
 
     try {
       await axios.put(`/api/tasks/${task._id}`, payload);
-      setLocalTasks(localTasks.map(t => {
+      setLocalTasks(prev => prev.map(t => {
         if (t && t.id === id) {
           return {
             ...t,
@@ -195,17 +238,15 @@ export default function Tasks({ user }) {
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to update task status in Firebase');
+      toast.error('Failed to update task status');
     }
   };
 
-  // Interactive Subtask Sync with Firebase
   const handleToggleSubtask = async (subId) => {
     if (!selectedTask) return;
-    const nextSubtasks = selectedTask.subtasks.map(s => 
+    const nextSubtasks = selectedTask.subtasks.map(s =>
       s.id === subId ? { ...s, completed: !s.completed } : s
     );
-
     const payload = {
       title: formatTaskTitle(selectedTask.dueDate),
       description: selectedTask.notes || 'Daily Checklist',
@@ -217,7 +258,7 @@ export default function Tasks({ user }) {
 
     try {
       await axios.put(`/api/tasks/${selectedTask._id}`, payload);
-      setLocalTasks(localTasks.map(t => 
+      setLocalTasks(prev => prev.map(t =>
         t.id === selectedTask.id ? { ...t, subtasks: nextSubtasks } : t
       ));
       setSelectedTask({
@@ -226,14 +267,12 @@ export default function Tasks({ user }) {
       });
     } catch (err) {
       console.error(err);
-      toast.error('Failed to sync checklist changes with Firebase');
+      toast.error('Failed to sync checklist changes');
     }
   };
 
 
   const filteredTasks = (localTasks || []).filter(Boolean);
-
-  // Animation Specifications
   const listVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -248,31 +287,33 @@ export default function Tasks({ user }) {
     exit: { opacity: 0, scale: 0.95, transition: { duration: 0.15 } }
   };
 
+  const location = {
+    Thiruvananthapuram: "Thiruvananthapuram",
+    Chirayinkeezhu: "Chirayinkeezhu",
+    Kottayam: "Kottayam",
+
+    Others: "Others"
+  }
+
   return (
     <div className="dashboard-container">
       <Sidebar />
-
       <main className="main-dashboard overflow-y-auto px-6 py-6 flex flex-col gap-6 relative bg-slate-50/50">
         <header className="flex justify-between items-center gap-4 border-b border-slate-100 pb-5 mb-2">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">Task Dashboard</h1>
             <p className="text-slate-500 text-sm mt-1">View and manage your daily tasks.</p>
           </div>
-          
-          <button 
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg shadow-blue-500/25 font-bold text-sm transition-all hover:-translate-y-0.5 active:scale-95 cursor-pointer"
-            onClick={triggerCreateModal}
-          >
+          <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg shadow-blue-500/25 font-bold text-sm transition-all hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+            onClick={triggerCreateModal}>
             <Plus size={16} strokeWidth={2.5} />
             Add New Task
           </button>
         </header>
-        {/* Tasks Grid Board */}
         <section className="flex-1 w-full min-h-[350px]">
           {isLoading ? (
-            // Premium Pulse skeletons rendering to simulate hydration loading
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {[1, 2, 3, 4].map(idx => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {[1, 2, 3].map(idx => (
                 <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-premium h-60 flex flex-col justify-between animate-pulse">
                   <div className="space-y-3">
                     <div className="flex justify-between">
@@ -288,16 +329,9 @@ export default function Tasks({ user }) {
               ))}
             </div>
           ) : filteredTasks.length > 0 ? (
-            <motion.div 
-              variants={listVariants}
-              initial="hidden"
-              animate="show"
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 w-full"
-            >
+            <motion.div variants={listVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
               <AnimatePresence mode="popLayout">
-                {filteredTasks.slice(0, 16).map(task => {
-                  
-                  // Color configuration mappings
+                {filteredTasks.map(task => {
                   const statusStyles = {
                     Pending: 'bg-slate-50 text-slate-500 border-slate-200',
                     'In Progress': 'bg-blue-50 text-blue-500 border-blue-200',
@@ -312,13 +346,10 @@ export default function Tasks({ user }) {
                       exit="exit"
                       whileHover={{ y: -5, transition: { duration: 0.15 } }}
                       className="bg-white border border-slate-100 rounded-2xl p-5 shadow-premium hover:shadow-premium-hover transition-shadow duration-300 flex flex-col justify-between min-h-[220px] relative group cursor-pointer"
-                      onClick={() => triggerViewModal(task)}
-                    >
-                      {/* Status Badge */}
+                      onClick={() => triggerViewModal(task)}>
                       <div className="flex justify-end items-center mb-3">
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${statusStyles[task.status]}`}
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                          onClick={(e) => e.stopPropagation()}>
                           {task.status}
                         </span>
                       </div>
@@ -326,35 +357,34 @@ export default function Tasks({ user }) {
                       {/* Header details */}
                       <div className="flex items-start gap-2.5 mt-1 flex-1 min-w-0">
                         {/* Instant checkbox toggle */}
-                        <div 
+                        <div
                           onClick={(e) => {
                             e.stopPropagation();
                             handleToggleComplete(task.id);
                           }}
-                          className={`flex-shrink-0 w-5 h-5 border rounded-md flex items-center justify-center cursor-pointer transition-all mt-0.5 ${
-                            task.completed 
-                              ? 'bg-emerald-500 border-emerald-500 text-white' 
+                          className={`flex-shrink-0 w-5 h-5 border rounded-md flex items-center justify-center cursor-pointer transition-all mt-0.5 ${task.completed
+                              ? 'bg-emerald-500 border-emerald-500 text-white'
                               : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50'
-                          }`}
-                        >
+                            }`}>
                           {task.completed && <Check size={12} strokeWidth={3} />}
                         </div>
 
                         {/* Title text & Description */}
                         <div className="flex-1 min-w-0">
-                          <h3 
+                          <h3
                             className={`font-black text-slate-850 text-xl md:text-xl leading-tight truncate hover:text-blue-600 transition-colors ${task.completed ? 'line-through text-slate-400 decoration-slate-400 decoration-2' : ''}`}
                           >
-                            {formatTaskTitle(task.dueDate)}
+                            {(task.title)}
                           </h3>
-                          
+
                           {/* Checklist preview list */}
                           <div className="mt-3.5 space-y-2">
                             {task.subtasks && task.subtasks.length > 0 ? (
                               <div className="space-y-1.5 max-h-28 overflow-y-auto">
-                                {task.subtasks.map(sub => (
+                                {task.subtasks.map((sub, index) => (
                                   <div key={sub.id} className="flex items-center gap-2 text-lg font-semibold text-slate-700">
                                     <span className={`w-1.5 h-1.5 rounded-full ${sub.completed ? 'bg-emerald-500' : 'bg-slate-350'}`}></span>
+                                    <span className="text-slate-400 text-sm font-bold">{index + 1}.</span>
                                     <span className={`truncate leading-normal ${sub.completed ? 'line-through text-slate-400 decoration-slate-300' : ''}`}>{sub.text}</span>
                                   </div>
                                 ))}
@@ -376,32 +406,27 @@ export default function Tasks({ user }) {
                             </span>
                           </div>
                           <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div 
+                            <div
                               className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                              style={{ 
-                                width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%` 
+                              style={{
+                                width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%`
                               }}
                             ></div>
                           </div>
                         </div>
                       )}
 
-                      {/* Spacer divider */}
                       <div className="h-px bg-slate-100 w-full my-3.5"></div>
 
-                      {/* Footer deadline & Action buttons */}
-                      <div className="flex justify-between items-center"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className={`flex items-center gap-1 text-[10px] font-semibold ${
-                          !task.completed && new Date(task.dueDate) < new Date() ? 'text-red-500' : 'text-slate-400'
-                        }`}>
+                      <div className="flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
+                        <div className={`flex items-center gap-1 text-[10px] font-semibold ${!task.completed && new Date(task.dueDate) < new Date() ? 'text-red-500' : 'text-slate-400'
+                          }`}>
                           <Calendar size={12} />
                           <span>{task.dueDate || 'No Deadline'}</span>
                         </div>
 
                         <div className="flex gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
-                          <button 
+                          <button
                             className="p-1 rounded-lg hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -411,7 +436,7 @@ export default function Tasks({ user }) {
                           >
                             <Eye size={14} />
                           </button>
-                          <button 
+                          <button
                             className="p-1 rounded-lg hover:bg-slate-50 text-slate-500 hover:text-blue-600 transition-colors cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -421,7 +446,7 @@ export default function Tasks({ user }) {
                           >
                             <Edit3 size={14} />
                           </button>
-                          <button 
+                          <button
                             className="p-1 rounded-lg hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -448,11 +473,11 @@ export default function Tasks({ user }) {
               <p className="text-xs text-slate-500 mt-1 max-w-sm">
                 Add fresh tasks to your personal checklist to populate the desktop board.
               </p>
-              <button 
+              <button
                 onClick={triggerCreateModal}
                 className="mt-5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-premium font-bold text-xs transition-transform active:scale-95 cursor-pointer"
               >
-                + Add A New Task Note
+                + Add A New Task
               </button>
             </div>
           )}
@@ -461,13 +486,13 @@ export default function Tasks({ user }) {
 
       </main>
 
-      <NotificationPanel />
+      <ChatPanel user={user} />
 
       {/* CRUD Modals (Create / Edit Overlay Panel) */}
       <AnimatePresence>
         {(activeModal === 'create' || activeModal === 'edit') && (
           <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 15 }}
@@ -479,7 +504,7 @@ export default function Tasks({ user }) {
                   <FolderLock size={15} className="text-slate-500" />
                   {activeModal === 'create' ? ' Add New Task' : 'Edit Task Details'}
                 </h2>
-                <button 
+                <button
                   onClick={() => setActiveModal(null)}
                   className="p-4 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                 >
@@ -490,17 +515,16 @@ export default function Tasks({ user }) {
               {/* Modal Input Fields Form */}
               <form onSubmit={(e) => handleSaveTask(e, true)}>
                 <div className="px-6 py-5 space-y-4">
-                  {/* Status & Due Date side-by-side */}
                   <div className="grid grid-cols-2 gap-4">
-                    {/* Status selection */}
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Status State</label>
-                      <select 
+                      <select
                         className="px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-800 bg-white focus:border-slate-400 cursor-pointer text-xs font-semibold"
                         value={formStatus}
                         onChange={(e) => setFormStatus(e.target.value)}
                       >
                         <option value="Pending">Pending</option>
+                        <option value="Just Created">Just Created</option>
                         <option value="In Progress">In Progress</option>
                         <option value="Completed">Completed</option>
                       </select>
@@ -509,7 +533,7 @@ export default function Tasks({ user }) {
                     {/* Due Date */}
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Due Date Deadline</label>
-                      <input 
+                      <input
                         type="date"
                         className="px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-800 focus:border-slate-400 cursor-pointer text-xs bg-white font-semibold"
                         value={formDueDate}
@@ -519,11 +543,40 @@ export default function Tasks({ user }) {
                     </div>
                   </div>
 
+                  {/* Task Title + Location Row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Task Title</label>
+                      <input
+                        type="text"
+                        placeholder="Enter a task name..."
+                        className="px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-800 focus:border-slate-400 bg-slate-50/50 focus:bg-white transition-all text-xs font-semibold"
+                        value={formTitle}
+                        onChange={(e) => setFormTitle(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Location</label>
+                      <select
+                        className="px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-800 focus:border-slate-400 bg-white cursor-pointer text-xs font-semibold"
+                        value={formLocation}
+                        onChange={(e) => setFormLocation(e.target.value)}
+                      >
+                        <option value="" disabled>Select Location...</option>
+                        <option value="Thiruvananthapuram">Thiruvananthapuram</option>
+                        <option value="Chirayinkeezhu">Chirayinkeezhu</option>
+                        <option value="Kottayam">Kottayam</option>
+                        <option value="Work from home">Work from home</option>
+                        <option value="Others">Others</option>
+                      </select>
+                    </div>
+                  </div>
+
                   {/* Checklist Sub-tasks */}
                   <div className="flex flex-col gap-2">
                     <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Checklist Sub-tasks</label>
                     <div className="flex gap-2">
-                      <input 
+                      <input
                         type="text"
                         placeholder="Add a step or sub-task item..."
                         className="flex-1 px-3 py-2 border border-slate-200 rounded-xl outline-none text-xs bg-slate-50/50 focus:bg-white focus:border-slate-400 transition-all font-semibold"
@@ -539,26 +592,23 @@ export default function Tasks({ user }) {
                           }
                         }}
                       />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (newSubtaskText.trim()) {
-                            setFormSubtasks([...formSubtasks, { id: Date.now(), text: newSubtaskText.trim(), completed: false }]);
-                            setNewSubtaskText('');
-                          }
-                        }}
-                        className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
-                      >
+                      <button type="button" onClick={() => {
+                        if (newSubtaskText.trim()) {
+                          setFormSubtasks([...formSubtasks, { id: Date.now(), text: newSubtaskText.trim(), completed: false }]);
+                          setNewSubtaskText('');
+                        }
+                      }}
+                        className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
                         Add
                       </button>
                     </div>
-                    
+
                     {formSubtasks.length > 0 && (
                       <div className="border border-slate-100 rounded-xl p-2.5 max-h-36 overflow-y-auto space-y-1.5 bg-slate-50/30">
                         {formSubtasks.map((sub, i) => (
                           <div key={sub.id} className="flex justify-between items-center gap-2 text-xs">
                             <div className="flex items-center gap-2 min-w-0">
-                              <input 
+                              <input
                                 type="checkbox"
                                 className="w-3.5 h-3.5 border rounded cursor-pointer accent-blue-600"
                                 checked={sub.completed}
@@ -566,13 +616,10 @@ export default function Tasks({ user }) {
                                   setFormSubtasks(formSubtasks.map((s, idx) => idx === i ? { ...s, completed: e.target.checked } : s));
                                 }}
                               />
-                              <span className={`truncate text-slate-700 ${sub.completed ? 'line-through text-slate-400' : ''}`}>{sub.text}</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setFormSubtasks(formSubtasks.filter((_, idx) => idx !== i))}
-                              className="text-slate-450 hover:text-red-500 transition-colors p-1 cursor-pointer"
-                            >
+                                  <span className="text-slate-400 font-bold">{i + 1}.</span>
+                                  <span className={`truncate text-slate-700 ${sub.completed ? 'line-through text-slate-400' : ''}`}>{sub.text}</span>
+                                </div>
+                                <button type="button" onClick={() => setFormSubtasks(formSubtasks.filter((_, idx) => idx !== i))} className="text-slate-450 hover:text-red-500 transition-colors p-1 cursor-pointer">
                               <X size={12} />
                             </button>
                           </div>
@@ -584,42 +631,23 @@ export default function Tasks({ user }) {
                   {/* Notes & Comments */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Detailed Notes & Comments</label>
-                    <textarea 
-                      placeholder="Jot down links, reminders, or general notes..."
-                      rows={2}
-                      className="px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-800 focus:border-slate-400 bg-slate-50/50 focus:bg-white transition-all text-xs resize-none font-semibold"
-                      value={formNotes}
-                      onChange={(e) => setFormNotes(e.target.value)}
-                    />
+                    <textarea placeholder="Jot down links, reminders, or general notes..." rows={2} className="px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-800 focus:border-slate-400 bg-slate-50/50 focus:bg-white transition-all text-xs resize-none font-semibold" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
                   </div>
                 </div>
 
                 {/* Modal Footer Controls */}
                 <div className="bg-slate-50/50 px-6 py-4 flex justify-between items-center border-t border-slate-100 flex-wrap gap-2">
-                  <button 
-                    type="button" 
-                    onClick={() => setActiveModal(null)}
-                    className="px-4 py-2 border border-slate-200 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors text-xs cursor-pointer"
-                  >
+                  <button type="button" onClick={() => setActiveModal(null)} className="px-4 py-2 border border-slate-200 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors text-xs cursor-pointer">
                     Cancel
                   </button>
-                  
+
                   <div className="flex gap-2">
-                    {/* Unique continuous batch creating flow */}
                     {activeModal === 'create' && (
-                      <button 
-                        type="button"
-                        onClick={(e) => handleSaveTask(e, false)}
-                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all text-xs cursor-pointer active:scale-95"
-                      >
+                      <button type="button" onClick={(e) => handleSaveTask(e, false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all text-xs cursor-pointer active:scale-95">
                         Add & Create Another
                       </button>
                     )}
-                    
-                    <button 
-                      type="submit" 
-                      className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-all text-xs shadow-premium active:scale-95 cursor-pointer"
-                    >
+                    <button type="submit" className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-all text-xs shadow-premium active:scale-95 cursor-pointer">
                       {activeModal === 'create' ? 'Add & Close' : 'Save Changes'}
                     </button>
                   </div>
@@ -632,7 +660,7 @@ export default function Tasks({ user }) {
         {/* Viewer Detail Modal Drawer */}
         {activeModal === 'view' && selectedTask && (
           <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 15 }}
@@ -641,7 +669,7 @@ export default function Tasks({ user }) {
               {/* Header */}
               <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Task Details</h3>
-                <button 
+                <button
                   onClick={() => setActiveModal(null)}
                   className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-450 hover:text-slate-700 transition-colors cursor-pointer"
                 >
@@ -653,13 +681,12 @@ export default function Tasks({ user }) {
               <div className="px-6 py-5 flex-1 overflow-y-auto space-y-4">
                 <div>
                   <h2 className="text-base font-extrabold text-slate-800 flex items-start gap-2.5 leading-snug">
-                    <span 
+                    <span
                       onClick={() => handleToggleComplete(selectedTask.id)}
-                      className={`flex-shrink-0 w-5 h-5 mt-0.5 border rounded-md flex items-center justify-center cursor-pointer transition-all ${
-                        selectedTask.completed 
-                          ? 'bg-emerald-500 border-emerald-500 text-white' 
+                      className={`flex-shrink-0 w-5 h-5 mt-0.5 border rounded-md flex items-center justify-center cursor-pointer transition-all ${selectedTask.completed
+                          ? 'bg-emerald-500 border-emerald-500 text-white'
                           : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50'
-                      }`}
+                        }`}
                     >
                       {selectedTask.completed && <Check size={12} strokeWidth={3} />}
                     </span>
@@ -676,10 +703,9 @@ export default function Tasks({ user }) {
                   <div className="flex flex-col gap-1">
                     <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wide">Status State</span>
                     <span className="font-semibold text-slate-705 flex items-center gap-1.5 mt-0.5">
-                      <span className={`w-2 h-2 rounded-full ${
-                        selectedTask.status === 'Completed' ? 'bg-emerald-500' :
-                        selectedTask.status === 'In Progress' ? 'bg-blue-500' : 'bg-slate-400'
-                      }`}></span>
+                      <span className={`w-2 h-2 rounded-full ${selectedTask.status === 'Completed' ? 'bg-emerald-500' :
+                          selectedTask.status === 'In Progress' ? 'bg-blue-500' : 'bg-slate-400'
+                        }`}></span>
                       {selectedTask.status}
                     </span>
                   </div>
@@ -700,18 +726,18 @@ export default function Tasks({ user }) {
                     <div className="flex flex-col gap-2 ml-7.5">
                       <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wide">Checklist Items</span>
                       <div className="space-y-2">
-                        {selectedTask.subtasks.map((sub) => (
+                        {selectedTask.subtasks.map((sub, index) => (
                           <div key={sub.id} className="flex items-center gap-2.5 text-sm text-slate-700">
-                            <div 
+                            <div
                               onClick={() => handleToggleSubtask(sub.id)}
-                              className={`flex-shrink-0 w-4 h-4 border rounded flex items-center justify-center cursor-pointer transition-all ${
-                                sub.completed 
-                                  ? 'bg-emerald-500 border-emerald-500 text-white' 
+                              className={`flex-shrink-0 w-4 h-4 border rounded flex items-center justify-center cursor-pointer transition-all ${sub.completed
+                                  ? 'bg-emerald-500 border-emerald-500 text-white'
                                   : 'border-slate-300 hover:border-slate-500'
-                              }`}
+                                }`}
                             >
                               {sub.completed && <Check size={10} strokeWidth={3} />}
                             </div>
+                            <span className="text-slate-400 font-bold">{index + 1}.</span>
                             <span className={sub.completed ? 'line-through text-slate-400 decoration-slate-400' : ''}>
                               {sub.text}
                             </span>
@@ -740,7 +766,7 @@ export default function Tasks({ user }) {
 
               {/* Close footer */}
               <div className="bg-slate-50/50 px-6 py-4 flex justify-end border-t border-slate-100">
-                <button 
+                <button
                   onClick={() => setActiveModal(null)}
                   className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-all text-xs active:scale-95 shadow-premium cursor-pointer"
                 >

@@ -161,28 +161,7 @@
   text-transform: uppercase;
 }
 
-.stat-value {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #1e293b;
-}
 
-.stat-value.pulse {
-  color: #10b981;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.stat-value.pulse::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  background: currentColor;
-  border-radius: 50%;
-  animation: pulse 1.5s infinite;
-}
 
 @keyframes pulse {
   0% { transform: scale(0.8); opacity: 0.5; }

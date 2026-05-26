@@ -2,7 +2,6 @@ import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import generateToken from '../utils/generateToken.js';
-import sendEmail from '../services/emailService.js';
 import { db } from '../config/db.js';
 import admin from 'firebase-admin';
 
@@ -36,7 +35,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     phone,
     password: hashedPassword,
     department: department || 'General',
-    isAdmin: false,
+    role: role || 'employee',
     isOnline: false,
     lastSeen: admin.firestore.FieldValue.serverTimestamp(),
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -50,7 +49,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     name: newUser.name,
     email: newUser.email,
     department: newUser.department,
-    isAdmin: newUser.isAdmin,
+    role: newUser.role,
     token,
   });
 });
@@ -86,13 +85,13 @@ export const loginUser = asyncHandler(async (req, res) => {
     });
 
     const token = generateToken(res, userDoc.id);
-    
+
     res.json({
       _id: userDoc.id,
       name: userData.name,
       email: userData.email,
       department: userData.department,
-      isAdmin: userData.isAdmin || false,
+      role: userData.role || 'employee',
       token,
     });
   } else {
@@ -128,10 +127,52 @@ export const getMe = asyncHandler(async (req, res) => {
     _id: req.user._id,
     name: req.user.name,
     email: req.user.email,
-    isAdmin: req.user.isAdmin || false,
+    role: req.user.role || 'employee',
     department: req.user.department,
+    phone: req.user.phone,
+    gender: req.user.gender,
+    dob: req.user.dob,
+    address: req.user.address,
   };
   res.status(200).json(user);
+});
+
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+export const updateProfile = asyncHandler(async (req, res) => {
+  const usersRef = db.collection('users');
+  const userRef = usersRef.doc(req.user._id);
+
+  const docSnap = await userRef.get();
+  if (!docSnap.exists) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  const { phone, gender, dob, address } = req.body;
+  
+  await userRef.update({
+    phone: phone || docSnap.data().phone || '',
+    gender: gender || docSnap.data().gender || '',
+    dob: dob || docSnap.data().dob || '',
+    address: address || docSnap.data().address || '',
+  });
+
+  const updatedDoc = await userRef.get();
+  const updatedUser = {
+    _id: updatedDoc.id,
+    name: updatedDoc.data().name,
+    email: updatedDoc.data().email,
+    role: updatedDoc.data().role || 'employee',
+    department: updatedDoc.data().department,
+    phone: updatedDoc.data().phone,
+    gender: updatedDoc.data().gender,
+    dob: updatedDoc.data().dob,
+    address: updatedDoc.data().address,
+  };
+
+  res.status(200).json(updatedUser);
 });
 
 // @desc    Forgot password
@@ -191,8 +232,8 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
 
   let userDocId;
   let userData;
-  snapshot.forEach(doc => { 
-    userDocId = doc.id; 
+  snapshot.forEach(doc => {
+    userDocId = doc.id;
     userData = doc.data();
   });
 

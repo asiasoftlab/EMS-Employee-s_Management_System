@@ -37,12 +37,12 @@ export default function ForgotPassword() {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Mobile Number</label>
-            <input 
-              type="tel" 
-              className="form-input" 
-              value={phone} 
-              onChange={(e) => setPhone(e.target.value)} 
-              required 
+            <input
+              type="tel"
+              className="form-input"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
               placeholder="Enter your mobile number"
             />
           </div>

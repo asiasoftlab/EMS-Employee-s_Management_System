@@ -31,7 +31,7 @@ export default function AdminLogin({ setUser }) {
     try {
       const { data } = await axios.post('/api/auth/login', { email, password });
 
-      if (!data.isAdmin) {
+      if (data.role !== 'admin' && data.role !== 'manager') {
         toast.error('Access Denied: Admin privileges required.');
         setLoading(false);
         return;

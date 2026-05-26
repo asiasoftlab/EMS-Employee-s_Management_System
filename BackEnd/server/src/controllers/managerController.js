@@ -81,3 +81,50 @@ export const getEmployeeDetails = asyncHandler(async (req, res) => {
 
   res.status(200).json({ employee: { _id: userDoc.id, ...employeeData }, tasks });
 });
+
+// @desc    Get tasks for a specific employee
+// @route   GET /api/manager/employee/:id/tasks
+// @access  Private (Manager/Admin)
+export const getEmployeeTasksById = asyncHandler(async (req, res) => {
+  const tasksSnapshot = await db.collection('tasks')
+    .where('employeeId', '==', req.params.id)
+    .get();
+
+  const tasks = [];
+  tasksSnapshot.forEach(doc => {
+    const data = doc.data();
+
+    // Normalize deadline
+    let deadlineStr = '';
+    if (data.deadline) {
+      const secs = data.deadline._seconds ?? data.deadline.seconds;
+      if (secs !== undefined) {
+        deadlineStr = new Date(secs * 1000).toISOString().split('T')[0];
+      } else if (data.deadline.toDate) {
+        deadlineStr = data.deadline.toDate().toISOString().split('T')[0];
+      } else {
+        try { deadlineStr = new Date(data.deadline).toISOString().split('T')[0]; } catch {}
+      }
+    }
+
+    // Normalize timestamps
+    const toMs = (ts) => {
+      if (!ts) return 0;
+      if (ts.toMillis) return ts.toMillis();
+      const s = ts._seconds ?? ts.seconds;
+      return s ? s * 1000 : new Date(ts).getTime();
+    };
+
+    tasks.push({
+      _id: doc.id,
+      ...data,
+      deadline: deadlineStr,
+      createdAt: toMs(data.createdAt),
+      updatedAt: toMs(data.updatedAt),
+    });
+  });
+
+  tasks.sort((a, b) => b.createdAt - a.createdAt);
+
+  res.status(200).json(tasks);
+});

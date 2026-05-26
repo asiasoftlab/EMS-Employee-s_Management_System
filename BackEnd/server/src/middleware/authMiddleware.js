@@ -6,14 +6,14 @@ import { db } from '../config/db.js';
 export const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  // Read the JWT from the cookie or Authorization header
-  if (req.cookies.jwt) {
-    token = req.cookies.jwt;
-  } else if (
+  // Prioritize the Authorization header, fallback to cookie
+  if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
 
   if (token) {

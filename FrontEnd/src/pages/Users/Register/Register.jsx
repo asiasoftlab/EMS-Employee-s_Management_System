@@ -66,24 +66,24 @@ export default function Register({ setUser }) {
       <div className="glass-card">
         <h1 className="card-title">Create Account</h1>
         <p className="card-subtitle">Join the Employee Management System (EMS)</p>
-        
+
         <form onSubmit={handleRegister}>
           <div className="form-group">
             <label className="form-label">Full Name</label>
-            <input type="text" name="name" className="form-input" value={formData.name} onChange={handleChange} required placeholder="Enter your full name"/>
+            <input type="text" name="name" className="form-input" value={formData.name} onChange={handleChange} required placeholder="Enter your full name" />
           </div>
           <div className="form-group">
             <label className="form-label">Email Address</label>
-            <input type="email" name="email" className="form-input" value={formData.email} onChange={handleChange} required placeholder="Enter your email"/>
+            <input type="email" name="email" className="form-input" value={formData.email} onChange={handleChange} required placeholder="Enter your email" />
           </div>
           <div className="form-group">
             <label className="form-label">Mobile Number</label>
-            <input type="tel" name="phone" className="form-input" value={formData.phone} onChange={handleChange} required placeholder="Enter your mobile number"/>
+            <input type="tel" name="phone" className="form-input" value={formData.phone} onChange={handleChange} required placeholder="Enter your mobile number" />
           </div>
           <div className="form-group">
             <label className="form-label">Password</label>
             <div style={{ position: 'relative' }}>
-              <input type={showPassword ? "text" : "password"} name="password" className="form-input" value={formData.password} onChange={handleChange} required placeholder="Enter your password" style={{ paddingRight: '2.5rem' }}/>
+              <input type={showPassword ? "text" : "password"} name="password" className="form-input" value={formData.password} onChange={handleChange} required placeholder="Enter your password" style={{ paddingRight: '2.5rem' }} />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute',
@@ -111,7 +111,7 @@ export default function Register({ setUser }) {
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
-        
+
         <div className="form-footer">
           Already have an account? <Link to="/login" className="form-link">Sign In</Link>
         </div>

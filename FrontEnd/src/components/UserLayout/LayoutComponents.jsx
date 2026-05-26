@@ -1,4 +1,7 @@
+import { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
+import axios from '../../config/axiosConfig';
+import { socket } from '../../config/socket';
 
 export const Sidebar = () => (
   <aside className="sidebar">
@@ -23,25 +26,150 @@ export const Sidebar = () => (
         Profile
       </NavLink>
     </nav>
-    <div style={{ marginTop: 'auto' }}>
-      <div className="stat-card" style={{ background: 'rgba(59, 130, 246, 0.05)', border: 'none' }}>
-        <span className="stat-label">System Status</span>
-        <span className="stat-value" style={{ fontSize: '1rem', color: '#10b981' }}>● Online</span>
-      </div>
-    </div>
   </aside>
 );
 
-export const NotificationPanel = () => (
-  <aside className="notification-panel">
-    <div className="panel-title">
-      Notifications
-      <span style={{ fontSize: '0.75rem', background: 'var(--primary)', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>0 New</span>
-    </div>
-    <div className="notification-list">
-      <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-        No new notifications.
+export const ChatPanel = ({ user }) => {
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState('');
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const chatId = user?._id;
+
+  useEffect(() => {
+    if (!chatId) return;
+
+    socket.connect();
+    socket.emit('join_room', chatId);
+
+    axios.get(`/api/chat/${chatId}/messages`)
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          setMessages(res.data);
+        }
+      })
+      .catch(err => console.error('Failed to load chat history:', err));
+
+    const handleReceiveMessage = (msg) => {
+      setMessages(prev => {
+        // Prevent duplicate messages if any
+        if (prev.some(m => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
+    };
+
+    socket.on('receive_message', handleReceiveMessage);
+
+    return () => {
+      socket.off('receive_message', handleReceiveMessage);
+      socket.disconnect();
+    };
+  }, [chatId]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = async (e) => {
+    e?.preventDefault();
+    const text = inputText.trim();
+    if (!text || sending || !user) return;
+
+    setSending(true);
+    setInputText('');
+    
+    socket.emit('send_message', {
+      roomId: chatId,
+      text,
+      senderId: user._id,
+      senderName: user.name || user.email,
+      senderEmail: user.email,
+      senderRole: 'employee'
+    });
+
+    setSending(false);
+    inputRef.current?.focus();
+  };
+
+  const formatTime = (ts) => {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  return (
+    <aside className="notification-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+      <div className="panel-title" style={{ flexShrink: 0, paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+        Live Chat
+        <span style={{ fontSize: '0.75rem', background: 'var(--primary)', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>
+          Admin
+        </span>
       </div>
-    </div>
-  </aside>
-);
+      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        {messages.length === 0 ? (
+          <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '2rem' }}>
+            No messages yet. Say hi!
+          </div>
+        ) : (
+          messages.map((msg) => {
+            const isSelf = msg.senderId === user?._id;
+            return (
+              <div key={msg.id} style={{ display: 'flex', justifyContent: isSelf ? 'flex-end' : 'flex-start' }}>
+                <div style={{
+                  maxWidth: '85%',
+                  padding: '0.55rem 0.75rem',
+                  borderRadius: '12px',
+                  backgroundColor: isSelf ? 'var(--primary)' : 'white',
+                  color: isSelf ? 'white' : 'var(--text-primary)',
+                  boxShadow: isSelf ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
+                  border: isSelf ? 'none' : '1px solid var(--border-color)',
+                  borderBottomRightRadius: isSelf ? '4px' : '12px',
+                  borderBottomLeftRadius: isSelf ? '12px' : '4px',
+                }}>
+                  <p style={{ margin: 0, fontSize: '0.85rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.4 }}>{msg.text}</p>
+                  <span style={{ display: 'block', fontSize: '0.65rem', textAlign: 'right', marginTop: '4px', opacity: 0.7 }}>
+                    {formatTime(msg.createdAt)}
+                  </span>
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={bottomRef} />
+      </div>
+      <form onSubmit={handleSend} style={{ flexShrink: 0, paddingTop: '1rem', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '0.5rem' }}>
+        <input
+          ref={inputRef}
+          type="text"
+          placeholder="Type a message..."
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          disabled={sending}
+          style={{
+            flex: 1,
+            padding: '0.6rem 1rem',
+            borderRadius: '20px',
+            border: '1px solid var(--border-color)',
+            outline: 'none',
+            fontSize: '0.85rem',
+            background: 'var(--bg-color)'
+          }}
+        />
+        <button
+          type="submit"
+          disabled={!inputText.trim() || sending}
+          style={{
+            width: '36px', height: '36px', borderRadius: '50%', border: 'none',
+            background: inputText.trim() ? '#10b981' : 'var(--border-color)',
+            color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: inputText.trim() ? 'pointer' : 'not-allowed',
+            transition: 'all 0.2s'
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+      </form>
+    </aside>
+  );
+};

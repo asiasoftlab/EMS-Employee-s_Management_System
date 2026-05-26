@@ -32,7 +32,7 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!/^\d{6}$/.test(otp)) {
       return toast.error('OTP must be exactly 6 digits');
     }
@@ -61,16 +61,16 @@ export default function ResetPassword() {
       <div className="glass-card reset-password-card">
         <h1 className="card-title">Reset Password</h1>
         <p className="card-subtitle">Enter your new password below.</p>
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">6-Digit OTP</label>
-            <input 
-              type="text" 
-              className="form-input" 
-              value={otp} 
-              onChange={(e) => setOtp(e.target.value)} 
-              required 
+            <input
+              type="text"
+              className="form-input"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              required
               placeholder="123456"
               maxLength="6"
               minLength="6"
@@ -80,18 +80,18 @@ export default function ResetPassword() {
           <div className="form-group">
             <label className="form-label">New Password</label>
             <div style={{ position: 'relative' }}>
-              <input 
-                type={showPassword ? "text" : "password"} 
-                className="form-input" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                required 
+              <input
+                type={showPassword ? "text" : "password"}
+                className="form-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
                 placeholder="••••••••"
                 minLength="6"
                 style={{ paddingRight: '2.5rem' }}
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute',
@@ -114,18 +114,18 @@ export default function ResetPassword() {
           <div className="form-group">
             <label className="form-label">Confirm New Password</label>
             <div style={{ position: 'relative' }}>
-              <input 
-                type={showConfirmPassword ? "text" : "password"} 
-                className="form-input" 
-                value={confirmPassword} 
-                onChange={(e) => setConfirmPassword(e.target.value)} 
-                required 
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                className="form-input"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
                 placeholder="••••••••"
                 minLength="6"
                 style={{ paddingRight: '2.5rem' }}
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 style={{
                   position: 'absolute',

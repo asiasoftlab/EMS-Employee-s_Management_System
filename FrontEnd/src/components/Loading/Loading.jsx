@@ -4,18 +4,27 @@ import './Loading.css';
 
 export default function Loading({ setUser, setLoading }) {
   useEffect(() => {
-    const fetchUser = async () => {
+    const checkAuth = async () => {
       try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
         const { data } = await axios.get('/api/auth/me');
         setUser(data);
       } catch (err) {
         console.log("Not logged in");
         localStorage.removeItem('token');
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
-    fetchUser();
+    checkAuth();
   }, [setUser, setLoading]);
 
   return (

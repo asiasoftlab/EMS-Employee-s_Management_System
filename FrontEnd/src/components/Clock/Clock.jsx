@@ -78,17 +78,6 @@ export default function Clock() {
                 </div>
               </div>
 
-              <div className="stats-grid">
-                <div className="stat-item">
-                  <span className="stat-label">Status</span>
-                  <span className="stat-value pulse">Online</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Timezone</span>
-                  <span className="stat-value">{Intl.DateTimeFormat().resolvedOptions().timeZone}</span>
-                </div>
-              </div>
-
               <div className="mini-calendar">
                 {/* Simplified Calendar Placeholder */}
                 <div className="calendar-grid">
