@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from '../../../config/axiosConfig';
 import { socket } from '../../../config/socket';
-import { Power, RefreshCw, Briefcase, Filter, ClipboardList, Clock, X, CheckCircle2, Circle, AlertCircle, User, Calendar, Tag, FileText, AlignLeft, Hash, MapPin, MessageSquare, Send } from 'lucide-react';
+import { Power, RefreshCw, Briefcase, Filter, ClipboardList, Clock, X, CheckCircle2, Circle, AlertCircle, User, Calendar, Tag, FileText, AlignLeft, Hash, MapPin, MessageSquare, Send, Megaphone, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import './AdminDashboard.css';
 
@@ -39,6 +39,53 @@ export default function AdminDashboard({ user }) {
   const [sendingChat, setSendingChat] = useState(false);
   const chatBottomRef = useRef(null);
   const chatInputRef = useRef(null);
+  
+  const [showNoticeModal, setShowNoticeModal] = useState(false);
+  const [adminNotices, setAdminNotices] = useState([]);
+  const [noticeTitle, setNoticeTitle] = useState('');
+  const [noticeContent, setNoticeContent] = useState('');
+  const [noticesLoading, setNoticesLoading] = useState(false);
+
+  const fetchNoticesAdmin = async () => {
+    setNoticesLoading(true);
+    try {
+      const res = await axios.get('/api/notices');
+      setAdminNotices(res.data || []);
+    } catch(err) {
+      toast.error('Failed to load notices');
+    } finally {
+      setNoticesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showNoticeModal) fetchNoticesAdmin();
+  }, [showNoticeModal]);
+
+  const handleCreateNotice = async (e) => {
+    e.preventDefault();
+    if (!noticeTitle.trim() || !noticeContent.trim()) return;
+    try {
+      const res = await axios.post('/api/notices', { title: noticeTitle, content: noticeContent });
+      setAdminNotices([res.data, ...adminNotices]);
+      setNoticeTitle('');
+      setNoticeContent('');
+      toast.success('Notice published');
+      // Broadcast update could be done here if needed
+    } catch(err) {
+      toast.error('Failed to create notice');
+    }
+  };
+
+  const handleDeleteNotice = async (id) => {
+    try {
+      await axios.delete(`/api/notices/${id}`);
+      setAdminNotices(adminNotices.filter(n => n.id !== id));
+      toast.success('Notice deleted');
+    } catch(err) {
+      toast.error('Failed to delete notice');
+    }
+  };
 
   const fetchEmployees = async (showRef = false) => {
     if (showRef) setRefreshing(true);
@@ -87,16 +134,16 @@ export default function AdminDashboard({ user }) {
 
   useEffect(() => {
     socket.connect();
-    
+
     const handleTaskUpdated = () => {
       fetchAllTasksSummary();
       if (selectedEmp) {
         fetchEmpTasks(selectedEmp);
       }
     };
-    
+
     socket.on('task_updated', handleTaskUpdated);
-    
+
     return () => {
       socket.off('task_updated', handleTaskUpdated);
       socket.disconnect(); // Disconnect only when the entire dashboard unmounts
@@ -189,10 +236,10 @@ export default function AdminDashboard({ user }) {
     e?.preventDefault();
     const text = chatInput.trim();
     if (!text || sendingChat || !selectedEmp) return;
-    
+
     setSendingChat(true);
     setChatInput('');
-    
+
     socket.emit('send_message', {
       roomId: selectedEmp._id,
       text,
@@ -237,7 +284,7 @@ export default function AdminDashboard({ user }) {
   const priorityClass = { High: 'priority-high', Medium: 'priority-medium', Low: 'priority-low' };
   const priorityColor = { High: '#ef4444', Medium: '#f59e0b', Low: '#10b981' };
 
-  
+
 
   return (
     <div className="admin-dashboard-container">
@@ -321,6 +368,14 @@ export default function AdminDashboard({ user }) {
           </div>
           <div className="header-actions">
             <button
+              className="refresh-btn"
+              onClick={() => setShowNoticeModal(true)}
+              title="Manage Notices"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', padding: '0 12px' }}
+            >
+              <Megaphone size={16} /> Manage Notices
+            </button>
+            <button
               className={`refresh-btn ${refreshing ? 'loading' : ''}`}
               onClick={() => { fetchEmployees(true); fetchAllTasksSummary(); if (selectedEmp) fetchEmpTasks(selectedEmp); }}
               disabled={refreshing || loading}
@@ -399,28 +454,28 @@ export default function AdminDashboard({ user }) {
                         ? task.title
                         : (task.description || task.notes || task.title || '—');
                       return (
-                      <tr key={task._id} className="tasks-row tasks-row--clickable" onClick={() => setSelectedTask(task)}>
-                        <td className="task-title-cell">{displayTitle}</td>
-                        <td className="task-desc-cell">{task.description || task.notes || '—'}</td>
-                        <td className="task-location-cell">
-                          {task.location ? (
-                            <span className="task-location-tag">
-                              <MapPin size={11} />
-                              {task.location}
+                        <tr key={task._id} className="tasks-row tasks-row--clickable" onClick={() => setSelectedTask(task)}>
+                          <td className="task-title-cell">{displayTitle}</td>
+                          <td className="task-desc-cell">{task.description || task.notes || '—'}</td>
+                          <td className="task-location-cell">
+                            {task.location ? (
+                              <span className="task-location-tag">
+                                <MapPin size={11} />
+                                {task.location}
+                              </span>
+                            ) : '—'}
+                          </td>
+                          <td>
+                            <span className={`task-status-badge ${statusClass[task.status] || 'status-pending'}`}>
+                              {task.status}
                             </span>
-                          ) : '—'}
-                        </td>
-                        <td>
-                          <span className={`task-status-badge ${statusClass[task.status] || 'status-pending'}`}>
-                            {task.status}
-                          </span>
-                        </td>
-                        <td className="task-date-cell">
-                          <Clock size={12} className="inline-icon" />
-                          {formatDate(task.deadline)}
-                        </td>
-                        
-                      </tr>
+                          </td>
+                          <td className="task-date-cell">
+                            <Clock size={12} className="inline-icon" />
+                            {formatDate(task.deadline)}
+                          </td>
+
+                        </tr>
                       );
                     })}
                   </tbody>
@@ -645,6 +700,77 @@ export default function AdminDashboard({ user }) {
                 <Send size={16} />
               </button>
             </form>
+          </div>
+        </div>
+      )}
+      {/* ── MANAGE NOTICES MODAL ── */}
+      {showNoticeModal && (
+        <div className="task-modal-overlay" onClick={() => setShowNoticeModal(false)}>
+          <div className="task-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', display: 'flex', flexDirection: 'column', maxHeight: '85vh' }}>
+            <div className="task-modal-header">
+              <div className="task-modal-header-left">
+                <div className="task-modal-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}>
+                  <Megaphone size={18} />
+                </div>
+                <div>
+                  <h2 className="task-modal-title">Notice Board Management</h2>
+                  <p className="task-modal-emp">Broadcast announcements to all employees</p>
+                </div>
+              </div>
+              <button className="task-modal-close" onClick={() => setShowNoticeModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="task-modal-body" style={{ overflowY: 'auto', padding: '20px' }}>
+              <form onSubmit={handleCreateNotice} style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: '#334155' }}>Create New Notice</h3>
+                <input
+                  type="text"
+                  placeholder="Notice Title"
+                  value={noticeTitle}
+                  onChange={e => setNoticeTitle(e.target.value)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '10px', outline: 'none', fontSize: '13px' }}
+                  required
+                />
+                <textarea
+                  placeholder="Notice Content"
+                  value={noticeContent}
+                  onChange={e => setNoticeContent(e.target.value)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '10px', outline: 'none', fontSize: '13px', minHeight: '80px', resize: 'vertical' }}
+                  required
+                />
+                <button type="submit" style={{ background: '#0f172a', color: 'white', padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                  Publish Notice
+                </button>
+              </form>
+
+              <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: '#334155' }}>Recent Notices</h3>
+              {noticesLoading ? (
+                <p style={{ fontSize: '12px', color: '#64748b' }}>Loading...</p>
+              ) : adminNotices.length === 0 ? (
+                <p style={{ fontSize: '12px', color: '#64748b' }}>No notices published yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {adminNotices.map(notice => (
+                    <div key={notice.id} style={{ padding: '15px', border: '1px solid #e2e8f0', borderRadius: '12px', position: 'relative' }}>
+                      <button 
+                        onClick={() => handleDeleteNotice(notice.id)}
+                        style={{ position: 'absolute', top: '15px', right: '15px', background: '#fef2f2', color: '#ef4444', border: 'none', width: '28px', height: '28px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                        title="Delete Notice"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                      <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a', marginBottom: '5px', paddingRight: '30px' }}>{notice.title}</h4>
+                      <p style={{ fontSize: '12px', color: '#475569', marginBottom: '10px', whiteSpace: 'pre-wrap' }}>{notice.content}</p>
+                      <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>
+                        {formatDate(notice.createdAt)} • By {notice.authorName}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

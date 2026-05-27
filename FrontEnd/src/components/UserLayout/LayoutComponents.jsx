@@ -3,31 +3,79 @@ import { NavLink } from 'react-router-dom';
 import axios from '../../config/axiosConfig';
 import { socket } from '../../config/socket';
 
-export const Sidebar = () => (
-  <aside className="sidebar">
-    <div className="sidebar-header">
-      <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)' }}>EMS Portal</h2>
-    </div>
-    <nav className="sidebar-nav">
-      <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-        My Tasks
-      </NavLink>
-      <NavLink to="/attendance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20"></path><path d="m4.93 4.93 14.14 14.14M4.93 19.07 19.07 4.93"></path></svg>
-        Attendance
-      </NavLink>
-      <NavLink to="/leaves" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path><path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"></path><path d="M13 13h4"></path><path d="M13 17h4"></path></svg>
-        Leave Requests
-      </NavLink>
-      <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        Profile
-      </NavLink>
-    </nav>
-  </aside>
-);
+export const Sidebar = () => {
+  const [unreadNotices, setUnreadNotices] = useState(0);
+
+  useEffect(() => {
+    const fetchNotices = async () => {
+      try {
+        const { data } = await axios.get('/api/notices');
+        const lastViewedStr = localStorage.getItem('lastViewedNoticeTime');
+        const lastViewed = lastViewedStr ? new Date(lastViewedStr) : new Date(0);
+
+        const newNotices = (data || []).filter(notice => {
+          const createdAt = notice.createdAt?._seconds
+            ? new Date(notice.createdAt._seconds * 1000)
+            : new Date(notice.createdAt);
+          return createdAt > lastViewed;
+        });
+
+        setUnreadNotices(newNotices.length);
+      } catch (err) {
+        console.error('Failed to check notices:', err);
+      }
+    };
+    fetchNotices();
+  }, []);
+
+  return (
+    <aside className="sidebar">
+      <nav className="sidebar-nav">
+        <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+          My Tasks
+        </NavLink>
+        <NavLink to="/attendance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20"></path><path d="m4.93 4.93 14.14 14.14M4.93 19.07 19.07 4.93"></path></svg>
+          Attendance
+        </NavLink>
+        <NavLink to="/leaves" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path><path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"></path><path d="M13 13h4"></path><path d="M13 17h4"></path></svg>
+          Leave Requests
+        </NavLink>
+        <NavLink to="/notice" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} style={{ position: 'relative' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>
+          Notice Board
+          {unreadNotices > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '8px',
+              left: '20px',
+              backgroundColor: '#ef4444',
+              color: 'white',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              minWidth: '16px',
+              height: '16px',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 4px',
+              border: '1px solid white'
+            }}>
+              {unreadNotices}
+            </span>
+          )}
+        </NavLink>
+        <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Profile
+        </NavLink>
+      </nav>
+    </aside>
+  );
+};
 
 export const ChatPanel = ({ user }) => {
   const [messages, setMessages] = useState([]);
@@ -79,7 +127,7 @@ export const ChatPanel = ({ user }) => {
 
     setSending(true);
     setInputText('');
-    
+
     socket.emit('send_message', {
       roomId: chatId,
       text,

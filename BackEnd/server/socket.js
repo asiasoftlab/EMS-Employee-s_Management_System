@@ -24,7 +24,7 @@ export const initializeSocket = (server) => {
     socket.on('send_message', async (data) => {
       // data should contain: roomId, text, senderId, senderName, senderRole
       const { roomId, text, senderId, senderName, senderRole } = data;
-      
+
       if (!roomId || !text) return;
 
       try {
@@ -40,7 +40,7 @@ export const initializeSocket = (server) => {
         if (db) {
           const msgsRef = db.collection('chats').doc(roomId).collection('messages');
           const addedMsg = await msgsRef.add(msgData);
-          
+
           // Also update the chat metadata
           const metaRef = db.collection('chats').doc(roomId);
           const metaSnap = await metaRef.get();
@@ -55,7 +55,7 @@ export const initializeSocket = (server) => {
           } else {
             await metaRef.set({ lastMessage: text, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
           }
-          
+
           // Attach the real timestamp for broadcasting
           msgData.id = addedMsg.id;
           msgData.createdAt = new Date().toISOString(); // fallback for immediate display

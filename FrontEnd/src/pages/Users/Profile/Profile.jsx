@@ -53,7 +53,7 @@ export default function Profile({ user }) {
           </div>
           <div>
             {!isEditing ? (
-              <button 
+              <button
                 onClick={() => setIsEditing(true)}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--primary)', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
               >
@@ -61,13 +61,13 @@ export default function Profile({ user }) {
               </button>
             ) : (
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button 
+                <button
                   onClick={() => setIsEditing(false)}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#e2e8f0', color: '#475569', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                   <X size={16} /> Cancel
                 </button>
-                <button 
+                <button
                   onClick={handleSave}
                   disabled={loading}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#10b981', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
@@ -100,10 +100,10 @@ export default function Profile({ user }) {
             <div>
               <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Phone</label>
               {isEditing ? (
-                <input 
-                  type="text" 
-                  value={formData.phone} 
-                  onChange={e => setFormData({...formData, phone: e.target.value})} 
+                <input
+                  type="text"
+                  value={formData.phone}
+                  onChange={e => setFormData({ ...formData, phone: e.target.value })}
                   style={inputStyle}
                   placeholder="Enter phone number"
                 />
@@ -114,9 +114,9 @@ export default function Profile({ user }) {
             <div>
               <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Gender</label>
               {isEditing ? (
-                <select 
-                  value={formData.gender} 
-                  onChange={e => setFormData({...formData, gender: e.target.value})} 
+                <select
+                  value={formData.gender}
+                  onChange={e => setFormData({ ...formData, gender: e.target.value })}
                   style={inputStyle}
                 >
                   <option value="">Select Gender</option>
@@ -131,10 +131,10 @@ export default function Profile({ user }) {
             <div>
               <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Date of Birth</label>
               {isEditing ? (
-                <input 
-                  type="date" 
-                  value={formData.dob} 
-                  onChange={e => setFormData({...formData, dob: e.target.value})} 
+                <input
+                  type="date"
+                  value={formData.dob}
+                  onChange={e => setFormData({ ...formData, dob: e.target.value })}
                   style={inputStyle}
                 />
               ) : (
@@ -144,10 +144,10 @@ export default function Profile({ user }) {
             <div>
               <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Address</label>
               {isEditing ? (
-                <textarea 
-                  value={formData.address} 
-                  onChange={e => setFormData({...formData, address: e.target.value})} 
-                  style={{...inputStyle, resize: 'none', height: '100px'}}
+                <textarea
+                  value={formData.address}
+                  onChange={e => setFormData({ ...formData, address: e.target.value })}
+                  style={{ ...inputStyle, resize: 'none', height: '100px' }}
                   placeholder="Enter full address"
                 />
               ) : (

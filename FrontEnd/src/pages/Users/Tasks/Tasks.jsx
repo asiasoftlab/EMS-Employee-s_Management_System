@@ -287,22 +287,15 @@ export default function Tasks({ user }) {
     exit: { opacity: 0, scale: 0.95, transition: { duration: 0.15 } }
   };
 
-  const location = {
-    Thiruvananthapuram: "Thiruvananthapuram",
-    Chirayinkeezhu: "Chirayinkeezhu",
-    Kottayam: "Kottayam",
-
-    Others: "Others"
-  }
 
   return (
     <div className="dashboard-container">
       <Sidebar />
-      <main className="main-dashboard overflow-y-auto px-6 py-6 flex flex-col gap-6 relative bg-slate-50/50">
-        <header className="flex justify-between items-center gap-4 border-b border-slate-100 pb-5 mb-2">
+      <main className="main-dashboard overflow-y-auto relative bg-slate-50/50">
+        <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">Task Dashboard</h1>
-            <p className="text-slate-500 text-sm mt-1">View and manage your daily tasks.</p>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: '700' }}>Task Dashboard</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>View and manage your daily tasks.</p>
           </div>
           <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg shadow-blue-500/25 font-bold text-sm transition-all hover:-translate-y-0.5 active:scale-95 cursor-pointer"
             onClick={triggerCreateModal}>

@@ -8,6 +8,7 @@ import Tasks from './pages/Users/Tasks/Tasks';
 import Attendance from './pages/Users/Attendance/Attendance';
 import Leaves from './pages/Users/Leaves/Leaves';
 import Profile from './pages/Users/Profile/Profile';
+import NoticeBoard from './pages/Users/NoticeBoard/notice';
 import ForgotPassword from './pages/Users/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/Users/ResetPassword/ResetPassword';
 import Loading from './components/Loading/Loading';
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/tasks" element={user ? (user.role === "employee" ? <Tasks user={user} /> : <Navigate to="/admin" replace />) : <Navigate to="/login" replace />} />
           <Route path="/attendance" element={user ? (user.role === "employee" ? <Attendance user={user} /> : <Navigate to="/admin" replace />) : <Navigate to="/login" replace />} />
           <Route path="/leaves" element={user ? (user.role === "employee" ? <Leaves user={user} /> : <Navigate to="/admin" replace />) : <Navigate to="/login" replace />} />
+          <Route path="/notice" element={user ? (user.role === "employee" ? <NoticeBoard user={user} /> : <Navigate to="/admin" replace />) : <Navigate to="/login" replace />} />
           <Route path="/profile" element={user ? (user.role === "employee" ? <Profile user={user} /> : <Navigate to="/admin" replace />) : <Navigate to="/login" replace />} />
           <Route path="/admin" element={user && (user.role === 'admin' || user.role === 'manager') ? (<AdminDashboard user={user} />) : (<Navigate to={user ? "/" : "/admin/login"} />)} />
           <Route path="/login" element={!user ? <Login setUser={setUser} /> : <Navigate to="/" />} />
