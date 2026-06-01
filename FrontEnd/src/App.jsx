@@ -11,6 +11,7 @@ import Profile from './pages/Users/Profile/Profile';
 import NoticeBoard from './pages/Users/NoticeBoard/notice';
 import ForgotPassword from './pages/Users/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/Users/ResetPassword/ResetPassword';
+import ReadMe from './pages/Users/Readme/readMe';
 import Loading from './components/Loading/Loading';
 import AdminDashboard from './pages/Admin/Dashboard/AdminDashboard';
 import AdminLogin from './pages/Admin/Login/AdminLogin';
@@ -20,7 +21,7 @@ import { useLocation } from 'react-router-dom';
 
 const NavWrapper = ({ user, setUser }) => {
   const location = useLocation();
-  const noNavbarPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/admin/login'];
+  const noNavbarPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/admin/login', '/readme'];
   const shouldHide = noNavbarPaths.includes(location.pathname) || location.pathname.startsWith('/admin');
   if (shouldHide) return null;
   return <Navbar user={user} setUser={setUser} />;
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="/register" element={!user ? <Register setUser={setUser} /> : <Navigate to="/" />} />
           <Route path="/forgot-password" element={!user ? <ForgotPassword /> : <Navigate to="/" />} />
           <Route path="/reset-password" element={!user ? <ResetPassword /> : <Navigate to="/" />} />
+          <Route path="/readme" element={<ReadMe />} />
         </Routes>
       </main>
     </div>

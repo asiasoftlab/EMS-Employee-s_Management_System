@@ -17,7 +17,7 @@ export default function Attendance({ user }) {
     try {
       const { data } = await axios.get('/api/attendance');
       setRecords(data || []);
-      
+
       const today = new Date().toISOString().split('T')[0];
       const foundToday = data.find(r => r.date === today);
       setTodayRecord(foundToday || null);
@@ -100,19 +100,19 @@ export default function Attendance({ user }) {
         </header>
 
         <section className="attendance-grid">
-          
+
           {/* Action Card */}
           <div className="attendance-action-card">
             <div className={`attendance-action-icon ${isClockedOut ? 'is-clocked-out' : isClockedIn ? 'is-clocked-in' : 'is-pending'}`}>
               <Clock size={40} />
             </div>
             <h2 className="attendance-status-heading">Current Status</h2>
-            
+
             {!isClockedIn && (
               <>
                 <p className="attendance-action-text">You have not clocked in yet today.</p>
-                <button 
-                  onClick={handleClockIn} 
+                <button
+                  onClick={handleClockIn}
                   disabled={actionLoading}
                   className="attendance-btn-clock-in"
                 >
@@ -124,8 +124,8 @@ export default function Attendance({ user }) {
             {isClockedIn && !isClockedOut && (
               <>
                 <p className="attendance-action-text">You clocked in at <strong>{formatTime(todayRecord.clockIn)}</strong>.</p>
-                <button 
-                  onClick={handleClockOut} 
+                <button
+                  onClick={handleClockOut}
                   disabled={actionLoading}
                   className="attendance-btn-clock-out"
                 >
@@ -162,7 +162,7 @@ export default function Attendance({ user }) {
                 </div>
               </div>
             </div>
-            
+
             <div className="attendance-weekly-card">
               <div className="attendance-stat-title">
                 <Clock size={16} /> Your Total Overtime (All Time)
@@ -184,11 +184,11 @@ export default function Attendance({ user }) {
           <div className="attendance-history-header">
             <h2 className="attendance-history-title">Recent History</h2>
           </div>
-          
+
           {loading ? (
-             <div className="attendance-empty-state">Loading records...</div>
+            <div className="attendance-empty-state">Loading records...</div>
           ) : records.length === 0 ? (
-             <div className="attendance-empty-state">No attendance records found.</div>
+            <div className="attendance-empty-state">No attendance records found.</div>
           ) : (
             <table className="attendance-table">
               <thead>

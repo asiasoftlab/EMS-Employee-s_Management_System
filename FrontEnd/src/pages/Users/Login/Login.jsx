@@ -106,6 +106,9 @@ export default function Login({ setUser }) {
         <div className="form-footer">
           Don't have an account? <Link to="/register" className="form-link">Register</Link>
         </div>
+        <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.75rem', color: '#64748b' }}>
+          By using this system, you agree to our <Link to="/readme" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Terms, Conditions & Policies</Link>
+        </div>
       </div>
     </div>
   );
