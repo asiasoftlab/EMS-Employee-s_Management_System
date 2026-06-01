@@ -39,7 +39,6 @@ export default function AdminDashboard({ user }) {
   const [sendingChat, setSendingChat] = useState(false);
   const chatBottomRef = useRef(null);
   const chatInputRef = useRef(null);
-  
   const [showNoticeModal, setShowNoticeModal] = useState(false);
   const [adminNotices, setAdminNotices] = useState([]);
   const [noticeTitle, setNoticeTitle] = useState('');

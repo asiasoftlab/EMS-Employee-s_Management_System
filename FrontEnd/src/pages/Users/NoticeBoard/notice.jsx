@@ -44,7 +44,7 @@ export default function NoticeBoard({ user }) {
   return (
     <div className="dashboard-container">
       <Sidebar />
-      <main className="main-dashboard overflow-y-auto px-6 py-6 flex flex-col gap-6 relative bg-slate-50/50">
+      <main className="main-dashboard">
         <header style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: '700' }}>Notice Board</h1>

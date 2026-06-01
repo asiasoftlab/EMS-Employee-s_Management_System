@@ -29,10 +29,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  const newUser = {
-    name,
-    email,
-    phone,
+  const newUser = {name,email,phone,
     password: hashedPassword,
     department: department || 'General',
     role: role || 'employee',
@@ -133,6 +130,7 @@ export const getMe = asyncHandler(async (req, res) => {
     gender: req.user.gender,
     dob: req.user.dob,
     address: req.user.address,
+    bloodGroup: req.user.bloodGroup,
   };
   res.status(200).json(user);
 });
@@ -150,13 +148,15 @@ export const updateProfile = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 
-  const { phone, gender, dob, address } = req.body;
+  const { name, phone, gender, dob, address, bloodGroup } = req.body;
   
   await userRef.update({
+    name: name || docSnap.data().name || '',
     phone: phone || docSnap.data().phone || '',
     gender: gender || docSnap.data().gender || '',
     dob: dob || docSnap.data().dob || '',
     address: address || docSnap.data().address || '',
+    bloodGroup: bloodGroup || docSnap.data().bloodGroup || '',
   });
 
   const updatedDoc = await userRef.get();
@@ -170,6 +170,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
     gender: updatedDoc.data().gender,
     dob: updatedDoc.data().dob,
     address: updatedDoc.data().address,
+    bloodGroup: updatedDoc.data().bloodGroup,
   };
 
   res.status(200).json(updatedUser);

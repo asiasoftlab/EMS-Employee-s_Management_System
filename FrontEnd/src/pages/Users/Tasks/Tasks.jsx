@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Sidebar, ChatPanel } from '../../../components/UserLayout/LayoutComponents';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Edit3, Trash2, Eye, Calendar, Check, X, Inbox, FolderLock } from 'lucide-react';
+import { Plus, Edit3, Trash2, Eye, Calendar, Check, X, Inbox, FolderLock, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axios from '../../../config/axiosConfig';
 import './Tasks.css';
@@ -33,49 +33,48 @@ export default function Tasks({ user }) {
   const [formSubtasks, setFormSubtasks] = useState([]);
   const [newSubtaskText, setNewSubtaskText] = useState('');
 
+  const fetchTasks = async () => {
+    setIsLoading(true);
+    try {
+      const { data } = await axios.get('/api/tasks');
+      const mappedTasks = (data || []).map(t => ({
+        id: t._id,
+        _id: t._id,
+        title: t.title || '',
+        location: t.location || '',
+        dueDate: (() => {
+          if (!t.deadline) return '';
+          if (typeof t.deadline === 'object') {
+            const secs = t.deadline._seconds !== undefined ? t.deadline._seconds : t.deadline.seconds;
+            if (secs !== undefined) {
+              return new Date(secs * 1000).toISOString().split('T')[0];
+            }
+          }
+          try {
+            const date = new Date(t.deadline);
+            if (!isNaN(date.getTime())) {
+              return date.toISOString().split('T')[0];
+            }
+          } catch (e) {
+            console.error("Failed to parse deadline", e);
+          }
+          return '';
+        })(),
+        status: t.status || 'Pending',
+        notes: t.notes || t.description || '',
+        completed: t.status === 'Completed',
+        subtasks: t.subtasks || []
+      }));
+      setLocalTasks(mappedTasks);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to retrieve tasks');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const parseDeadline = (deadlineVal) => {
-      if (!deadlineVal) return '';
-      if (typeof deadlineVal === 'object') {
-        const secs = deadlineVal._seconds !== undefined ? deadlineVal._seconds : deadlineVal.seconds;
-        if (secs !== undefined) {
-          return new Date(secs * 1000).toISOString().split('T')[0];
-        }
-      }
-      try {
-        const date = new Date(deadlineVal);
-        if (!isNaN(date.getTime())) {
-          return date.toISOString().split('T')[0];
-        }
-      } catch (e) {
-        console.error("Failed to parse deadline", e);
-      }
-      return '';
-    };
-
-    const fetchTasks = async () => {
-      try {
-        const { data } = await axios.get('/api/tasks');
-        const mappedTasks = (data || []).map(t => ({
-          id: t._id,
-          _id: t._id,
-          title: t.title || '',
-          location: t.location || '',
-          dueDate: parseDeadline(t.deadline),
-          status: t.status || 'Pending',
-          notes: t.notes || t.description || '',
-          completed: t.status === 'Completed',
-          subtasks: t.subtasks || []
-        }));
-        setLocalTasks(mappedTasks);
-      } catch (err) {
-        console.error(err);
-        toast.error('Failed to retrieve tasks');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (user) {
       fetchTasks();
     }
@@ -297,11 +296,16 @@ export default function Tasks({ user }) {
             <h1 style={{ fontSize: '1.75rem', fontWeight: '700' }}>Task Dashboard</h1>
             <p style={{ color: 'var(--text-secondary)' }}>View and manage your daily tasks.</p>
           </div>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg shadow-blue-500/25 font-bold text-sm transition-all hover:-translate-y-0.5 active:scale-95 cursor-pointer"
-            onClick={triggerCreateModal}>
-            <Plus size={16} strokeWidth={2.5} />
-            Add New Task
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={fetchTasks} disabled={isLoading} className="p-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 shadow-sm cursor-pointer transition-colors text-slate-600">
+              <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
+            </button>
+            <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg shadow-blue-500/25 font-bold text-sm transition-all hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+              onClick={triggerCreateModal}>
+              <Plus size={16} strokeWidth={2.5} />
+              Add New Task
+            </button>
+          </div>
         </header>
         <section className="flex-1 w-full min-h-[350px]">
           {isLoading ? (
@@ -330,6 +334,7 @@ export default function Tasks({ user }) {
                     'In Progress': 'bg-blue-50 text-blue-500 border-blue-200',
                     Completed: 'bg-emerald-50 text-emerald-600 border-emerald-200'
                   };
+                  const isToday = task.dueDate === new Date().toISOString().split('T')[0];
 
                   return (
                     <motion.div
@@ -353,9 +358,9 @@ export default function Tasks({ user }) {
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleToggleComplete(task.id);
+                            if (isToday) handleToggleComplete(task.id);
                           }}
-                          className={`flex-shrink-0 w-5 h-5 border rounded-md flex items-center justify-center cursor-pointer transition-all mt-0.5 ${task.completed
+                          className={`flex-shrink-0 w-5 h-5 border rounded-md flex items-center justify-center transition-all mt-0.5 ${!isToday ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${task.completed
                               ? 'bg-emerald-500 border-emerald-500 text-white'
                               : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50'
                             }`}>
@@ -430,12 +435,12 @@ export default function Tasks({ user }) {
                             <Eye size={14} />
                           </button>
                           <button
-                            className="p-1 rounded-lg hover:bg-slate-50 text-slate-500 hover:text-blue-600 transition-colors cursor-pointer"
+                            className={`p-1 rounded-lg transition-colors ${isToday ? 'hover:bg-slate-50 text-slate-500 hover:text-blue-600 cursor-pointer' : 'text-slate-300 cursor-not-allowed opacity-50'}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              triggerEditModal(task);
+                              if (isToday) triggerEditModal(task);
                             }}
-                            title="Edit Parameters"
+                            title={isToday ? "Edit Parameters" : "Cannot edit past/future tasks"}
                           >
                             <Edit3 size={14} />
                           </button>
@@ -675,8 +680,12 @@ export default function Tasks({ user }) {
                 <div>
                   <h2 className="text-base font-extrabold text-slate-800 flex items-start gap-2.5 leading-snug">
                     <span
-                      onClick={() => handleToggleComplete(selectedTask.id)}
-                      className={`flex-shrink-0 w-5 h-5 mt-0.5 border rounded-md flex items-center justify-center cursor-pointer transition-all ${selectedTask.completed
+                      onClick={() => {
+                        if (selectedTask.dueDate === new Date().toISOString().split('T')[0]) {
+                          handleToggleComplete(selectedTask.id);
+                        }
+                      }}
+                      className={`flex-shrink-0 w-5 h-5 mt-0.5 border rounded-md flex items-center justify-center transition-all ${selectedTask.dueDate !== new Date().toISOString().split('T')[0] ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${selectedTask.completed
                           ? 'bg-emerald-500 border-emerald-500 text-white'
                           : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50'
                         }`}
@@ -722,8 +731,12 @@ export default function Tasks({ user }) {
                         {selectedTask.subtasks.map((sub, index) => (
                           <div key={sub.id} className="flex items-center gap-2.5 text-sm text-slate-700">
                             <div
-                              onClick={() => handleToggleSubtask(sub.id)}
-                              className={`flex-shrink-0 w-4 h-4 border rounded flex items-center justify-center cursor-pointer transition-all ${sub.completed
+                              onClick={() => {
+                                if (selectedTask.dueDate === new Date().toISOString().split('T')[0]) {
+                                  handleToggleSubtask(sub.id);
+                                }
+                              }}
+                              className={`flex-shrink-0 w-4 h-4 border rounded flex items-center justify-center transition-all ${selectedTask.dueDate !== new Date().toISOString().split('T')[0] ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${sub.completed
                                   ? 'bg-emerald-500 border-emerald-500 text-white'
                                   : 'border-slate-300 hover:border-slate-500'
                                 }`}

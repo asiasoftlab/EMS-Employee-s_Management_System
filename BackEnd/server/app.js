@@ -4,14 +4,13 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import './src/config/db.js';
 import { notFound, errorHandler } from './src/middleware/errorMiddleware.js';
-
-// Route imports
 import authRoutes from './src/routes/authRoutes.js';
 import taskRoutes from './src/routes/taskRoutes.js';
 import managerRoutes from './src/routes/managerRoutes.js';
 import notificationRoutes from './src/routes/notificationRoutes.js';
 import chatRoutes from './src/routes/chatRoutes.js';
 import noticeRoutes from './src/routes/noticeRoutes.js';
+import attendanceRoutes from './src/routes/attendanceRoutes.js';
 
 dotenv.config({ quiet: true });
 
@@ -33,6 +32,7 @@ app.use('/api/manager', managerRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/notices', noticeRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Root route
 app.get('/', (req, res) => {
