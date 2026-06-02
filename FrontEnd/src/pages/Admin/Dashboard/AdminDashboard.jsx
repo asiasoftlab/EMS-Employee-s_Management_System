@@ -44,6 +44,7 @@ export default function AdminDashboard({ user }) {
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeContent, setNoticeContent] = useState('');
   const [noticesLoading, setNoticesLoading] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(true);
 
   const fetchNoticesAdmin = async () => {
     setNoticesLoading(true);
@@ -288,7 +289,7 @@ export default function AdminDashboard({ user }) {
   return (
     <div className="admin-dashboard-container">
       {/* ── LEFT SIDEBAR ── */}
-      <aside className="admin-sidebar-pane">
+      <aside className={`admin-sidebar-pane ${!showMobileSidebar ? 'mobile-hidden' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-title-wrapper">
             <h2>Employee Directory</h2>
@@ -329,7 +330,7 @@ export default function AdminDashboard({ user }) {
                   <div
                     key={emp._id}
                     className={`emp-card ${isSelected ? 'emp-card--selected' : ''} ${emp.isOnline ? 'emp-card--online' : 'emp-card--offline'}`}
-                    onClick={() => fetchEmpTasks(emp)}
+                    onClick={() => { fetchEmpTasks(emp); setShowMobileSidebar(false); }}
                     title={`View ${emp.name}'s tasks`}
                   >
                     <div className="emp-card-top">
@@ -359,7 +360,10 @@ export default function AdminDashboard({ user }) {
       <main className="admin-main-pane">
         {/* Header */}
         <header className="main-pane-header">
-          <div className="admin-identity">
+          <div className="admin-identity flex items-center gap-2">
+            <button className="mobile-menu-toggle mr-2 block lg:hidden" onClick={() => setShowMobileSidebar(!showMobileSidebar)}>
+              <AlignLeft size={20} />
+            </button>
             <div>
               <h3>Asia Softlab Employee's</h3>
               <p>{user.email}</p>
@@ -705,7 +709,7 @@ export default function AdminDashboard({ user }) {
       {/* ── MANAGE NOTICES MODAL ── */}
       {showNoticeModal && (
         <div className="task-modal-overlay" onClick={() => setShowNoticeModal(false)}>
-          <div className="task-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', display: 'flex', flexDirection: 'column', maxHeight: '85vh' }}>
+          <div className="task-modal" onClick={e => e.stopPropagation()} style={{ width: '90%', maxWidth: '600px', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
             <div className="task-modal-header">
               <div className="task-modal-header-left">
                 <div className="task-modal-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}>

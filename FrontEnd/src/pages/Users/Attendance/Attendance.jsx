@@ -190,44 +190,46 @@ export default function Attendance({ user }) {
           ) : records.length === 0 ? (
             <div className="attendance-empty-state">No attendance records found.</div>
           ) : (
-            <table className="attendance-table">
-              <thead>
-                <tr className="attendance-th-row">
-                  <th className="attendance-th">Date</th>
-                  <th className="attendance-th">Clock In</th>
-                  <th className="attendance-th">Clock Out</th>
-                  <th className="attendance-th">Total Hours</th>
-                  <th className="attendance-th">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {records.map(record => (
-                  <tr key={record._id} className="attendance-tr">
-                    <td className="attendance-td-date">{formatDate(record.date)}</td>
-                    <td className="attendance-td">{formatTime(record.clockIn)}</td>
-                    <td className="attendance-td">{formatTime(record.clockOut)}</td>
-                    <td className="attendance-td-hours">{record.totalHours ? `${record.totalHours}h` : '-'}</td>
-                    <td className="attendance-td">
-                      {record.clockOut ? (
-                        record.totalHours >= 7.5 ? (
-                          <span className="attendance-status-badge" style={{ background: 'white', color: '#166534' }}>
-                            Full Day
-                          </span>
-                        ) : (
-                          <span className="attendance-status-badge" style={{ background: 'white', color: '#991b1b' }}>
-                            Incomplete ({record.totalHours} ‹ 7.5h)
-                          </span>
-                        )
-                      ) : (
-                        <span className="attendance-status-badge" style={{ background: 'white', color: '#3730a3' }}>
-                          In Progress
-                        </span>
-                      )}
-                    </td>
+            <div className="attendance-table-wrapper" style={{ overflowX: 'auto', width: '100%' }}>
+              <table className="attendance-table">
+                <thead>
+                  <tr className="attendance-th-row">
+                    <th className="attendance-th">Date</th>
+                    <th className="attendance-th">Clock In</th>
+                    <th className="attendance-th">Clock Out</th>
+                    <th className="attendance-th">Total Hours</th>
+                    <th className="attendance-th">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {records.map(record => (
+                    <tr key={record._id} className="attendance-tr">
+                      <td className="attendance-td-date">{formatDate(record.date)}</td>
+                      <td className="attendance-td">{formatTime(record.clockIn)}</td>
+                      <td className="attendance-td">{formatTime(record.clockOut)}</td>
+                      <td className="attendance-td-hours">{record.totalHours ? `${record.totalHours}h` : '-'}</td>
+                      <td className="attendance-td">
+                        {record.clockOut ? (
+                          record.totalHours >= 7.5 ? (
+                            <span className="attendance-status-badge" style={{ background: 'white', color: '#166534' }}>
+                              Full Day
+                            </span>
+                          ) : (
+                            <span className="attendance-status-badge" style={{ background: 'white', color: '#991b1b' }}>
+                              Incomplete ({record.totalHours} ‹ 7.5h)
+                            </span>
+                          )
+                        ) : (
+                          <span className="attendance-status-badge" style={{ background: 'white', color: '#3730a3' }}>
+                            In Progress
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
 

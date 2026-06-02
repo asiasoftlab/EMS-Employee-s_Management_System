@@ -45,12 +45,12 @@ export default function NoticeBoard({ user }) {
     <div className="dashboard-container">
       <Sidebar />
       <main className="main-dashboard">
-        <header style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: '700' }}>Notice Board</h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Check the latest updates and company announcements.</p>
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div className="flex-1 pr-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Notice Board</h1>
+            <p className="text-sm text-slate-500 mt-1">Check the latest updates and company announcements.</p>
           </div>
-          <button onClick={fetchNotices} disabled={loading} className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 shadow-sm cursor-pointer transition-colors text-slate-600">
+          <button onClick={fetchNotices} disabled={loading} className="p-2.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 shadow-sm cursor-pointer transition-colors text-slate-600 self-end sm:self-auto flex items-center justify-center">
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
         </header>
@@ -59,7 +59,7 @@ export default function NoticeBoard({ user }) {
           {loading ? (
             <div className="flex flex-col gap-4">
               {[1, 2, 3].map(idx => (
-                <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-premium h-32 flex flex-col justify-between animate-pulse">
+                <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-premium min-h-[8rem] flex flex-col justify-between animate-pulse">
                    <div className="h-5 bg-slate-200 rounded w-1/3 mb-2"></div>
                    <div className="h-4 bg-slate-200 rounded w-full mb-1"></div>
                    <div className="h-4 bg-slate-200 rounded w-5/6"></div>
@@ -70,12 +70,12 @@ export default function NoticeBoard({ user }) {
             <div className="flex flex-col gap-5 w-full">
               {notices.map((notice) => (
                 <div key={notice.id} className="bg-white border border-slate-100 rounded-2xl p-6 shadow-premium hover:shadow-premium-hover transition-shadow duration-300 relative group">
-                  <div className="flex items-start gap-4">
+                  <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5">
                     <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                       <Megaphone size={22} />
                     </div>
                     <div className="flex-1">
-                      <div className="flex justify-between items-start gap-4">
+                      <div className="flex flex-wrap justify-between items-start gap-2 sm:gap-4">
                         <h3 className="font-black text-slate-800 text-xl leading-tight mb-2">
                           {notice.title}
                         </h3>
@@ -89,7 +89,7 @@ export default function NoticeBoard({ user }) {
                         {notice.content}
                       </p>
                       
-                      <div className="flex items-center gap-4 text-xs font-semibold text-slate-400 pt-3 border-t border-slate-50">
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-semibold text-slate-400 pt-3 border-t border-slate-50">
                         <span className="flex items-center gap-1.5">
                           <Calendar size={13} />
                           {formatDate(notice.createdAt)}

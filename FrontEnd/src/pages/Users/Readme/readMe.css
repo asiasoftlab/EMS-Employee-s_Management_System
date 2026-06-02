@@ -388,3 +388,113 @@
 .readme-table tr:hover td {
   background-color: #f1f5f9;
 }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (Media Queries)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .readme-main {
+    margin-left: 240px;
+    padding: 3rem 2rem 6rem;
+  }
+  .readme-sidebar {
+    width: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .readme-container {
+    flex-direction: column;
+  }
+  
+  .readme-sidebar {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: auto;
+    max-height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem 1.5rem;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  }
+  
+  .readme-back-btn {
+    margin-bottom: 1rem;
+    width: fit-content;
+  }
+  
+  .readme-sidebar-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .readme-sidebar-subtitle {
+    display: none; /* Hide to save vertical space on mobile */
+  }
+  
+  .readme-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    gap: 0.25rem;
+  }
+  
+  .readme-nav::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .readme-nav-item {
+    white-space: nowrap;
+    width: auto;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .readme-main {
+    margin-left: 0;
+    padding: 2rem 1.5rem 4rem;
+  }
+  
+  .readme-notice {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    gap: 0.75rem;
+  }
+  
+  .readme-hours-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .readme-table {
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 480px) {
+  .readme-section-title {
+    font-size: 1.5rem;
+  }
+  
+  .readme-features-grid, .readme-dos-donts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .readme-link-card {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .readme-footer-text {
+    flex-direction: column;
+    text-align: center;
+  }
+}

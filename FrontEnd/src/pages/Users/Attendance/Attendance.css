@@ -292,4 +292,58 @@
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (Media Queries)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .attendance-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .attendance-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  
+  .attendance-header > div {
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  .attendance-refresh-btn {
+    align-self: flex-start;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+  }
+  
+  .attendance-history-section {
+    overflow-x: auto;
+  }
+  
+  .attendance-table {
+    min-width: 600px; /* Forces table to scroll instead of breaking layout */
+  }
+}
+
+@media (max-width: 480px) {
+  .attendance-stats-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .attendance-action-card {
+    padding: 1.5rem 1rem;
+  }
+  
+  .attendance-weekly-card {
+    padding: 1.5rem 1rem;
+  }
 }

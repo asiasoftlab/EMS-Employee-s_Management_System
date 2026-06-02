@@ -4,6 +4,7 @@ import axios from '../../../config/axiosConfig';
 import { toast } from 'react-toastify';
 import { Edit2, Save, X, RefreshCw } from 'lucide-react';
 import '../Tasks/Tasks.css';
+import './Profile.css';
 
 export default function Profile({ user }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -35,25 +36,18 @@ export default function Profile({ user }) {
     }
   };
 
-  const inputStyle = {
-    padding: '0.75rem',
-    borderRadius: '8px',
-    border: '1px solid var(--border-color)',
-    width: '100%',
-    outline: 'none',
-    fontSize: '0.875rem'
-  };
+  // We use the .profile-input class from Profile.css for form elements
 
   return (
     <div className="dashboard-container">
       <Sidebar />
-      <main className="main-dashboard">
-        <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <main className="main-dashboard overflow-y-auto">
+        <header className="profile-header">
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: '700' }}>User Profile</h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Manage your personal information and account settings.</p>
+            <h1 className="text-2xl font-bold text-slate-800">User Profile</h1>
+            <p className="text-sm text-slate-500 mt-1">Manage your personal information and account settings.</p>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div className="profile-header-actions">
             <button 
               onClick={() => window.location.reload()} 
               disabled={loading} 
@@ -87,85 +81,85 @@ export default function Profile({ user }) {
             )}
           </div>
         </header>
-        <div className="tasks-container" style={{ padding: '2rem' }}>
-          <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', marginBottom: '2rem' }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 'bold', flexShrink: 0 }}>
+        <div className="tasks-container p-4 sm:p-8 relative">
+          <div className="profile-info-section">
+            <div className="profile-avatar shadow-sm">
               {(formData.name || user?.name || 'U').charAt(0).toUpperCase()}
             </div>
-            <div style={{ flex: 1, maxWidth: '400px' }}>
+            <div className="flex-1 w-full max-w-md">
               {isEditing ? (
                 <input
                   type="text"
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  style={{ ...inputStyle, fontSize: '1.25rem', fontWeight: '600', padding: '0.5rem', marginBottom: '0.25rem' }}
+                  className="profile-input !text-xl !font-semibold !p-2 !mb-1"
                   placeholder="Enter full name"
                 />
               ) : (
-                <h2 style={{ fontSize: '1.25rem', fontWeight: '600' }}>{user?.name || 'User'}</h2>
+                <h2 className="text-xl font-semibold">{user?.name || 'User'}</h2>
               )}
               <p style={{ color: 'var(--text-secondary)' }}>{user?.email || 'N/A'}</p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div>
-              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Role</label>
-              <div style={{ padding: '0.75rem', background: 'rgba(0,0,0,0.02)', borderRadius: '8px' }}>{user?.role || 'Employee'}</div>
+          <div className="profile-details-grid">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Role</label>
+              <div className="profile-field-value">{user?.role || 'Employee'}</div>
             </div>
-            <div>
-              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Department</label>
-              <div style={{ padding: '0.75rem', background: 'rgba(0,0,0,0.02)', borderRadius: '8px' }}>{user?.department || 'Not Assigned'}</div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Department</label>
+              <div className="profile-field-value">{user?.department || 'Not Assigned'}</div>
             </div>
-            <div>
-              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Phone</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Phone</label>
               {isEditing ? (
                 <input
                   type="text"
                   value={formData.phone}
                   onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                  style={inputStyle}
+                  className="profile-input"
                   placeholder="Enter phone number"
                 />
               ) : (
-                <div style={{ padding: '0.75rem', background: 'rgba(0,0,0,0.02)', borderRadius: '8px' }}>{user?.phone || 'Not Assigned'}</div>
+                <div className="profile-field-value">{user?.phone || 'Not Assigned'}</div>
               )}
             </div>
-            <div>
-              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Gender</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Gender</label>
               {isEditing ? (
                 <select
                   value={formData.gender}
                   onChange={e => setFormData({ ...formData, gender: e.target.value })}
-                  style={inputStyle}
+                  className="profile-input"
                 >
                   <option value="">Select Gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>
               ) : (
-                <div style={{ padding: '0.75rem', background: 'rgba(0,0,0,0.02)', borderRadius: '8px' }}>{user?.gender || 'Not Assigned'}</div>
+                <div className="profile-field-value">{user?.gender || 'Not Assigned'}</div>
               )}
             </div>
-            <div>
-              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Date of Birth</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Date of Birth</label>
               {isEditing ? (
                 <input
                   type="date"
                   value={formData.dob}
                   onChange={e => setFormData({ ...formData, dob: e.target.value })}
-                  style={inputStyle}
+                  className="profile-input"
                 />
               ) : (
-                <div style={{ padding: '0.75rem', background: 'rgba(0,0,0,0.02)', borderRadius: '8px' }}>{user?.dob || 'Not Assigned'}</div>
+                <div className="profile-field-value">{user?.dob || 'Not Assigned'}</div>
               )}
             </div>
-            <div>
-              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Blood Group</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Blood Group</label>
               {isEditing ? (
                 <select
                   value={formData.bloodGroup}
                   onChange={e => setFormData({ ...formData, bloodGroup: e.target.value })}
-                  style={inputStyle}
+                  className="profile-input"
                 >
                   <option value="">Select Blood Group</option>
                   <option value="A+">A+</option>
@@ -178,20 +172,20 @@ export default function Profile({ user }) {
                   <option value="AB-">AB-</option>
                 </select>
               ) : (
-                <div style={{ padding: '0.75rem', background: 'rgba(0,0,0,0.02)', borderRadius: '8px' }}>{user?.bloodGroup || 'Not Assigned'}</div>
+                <div className="profile-field-value">{user?.bloodGroup || 'Not Assigned'}</div>
               )}
             </div>
-            <div>
-              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Address</label>
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Address</label>
               {isEditing ? (
                 <textarea
                   value={formData.address}
                   onChange={e => setFormData({ ...formData, address: e.target.value })}
-                  style={{ ...inputStyle, resize: 'none', height: '100px' }}
+                  className="profile-input resize-none h-[100px]"
                   placeholder="Enter full address"
                 />
               ) : (
-                <div style={{ padding: '0.75rem', background: 'rgba(0,0,0,0.02)', borderRadius: '8px', minHeight: '100px' }}>{user?.address || 'Not Assigned'}</div>
+                <div className="profile-field-value !items-start min-h-[100px]">{user?.address || 'Not Assigned'}</div>
               )}
             </div>
           </div>

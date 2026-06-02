@@ -291,7 +291,7 @@ export default function Tasks({ user }) {
     <div className="dashboard-container">
       <Sidebar />
       <main className="main-dashboard overflow-y-auto relative bg-slate-50/50">
-        <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: '700' }}>Task Dashboard</h1>
             <p style={{ color: 'var(--text-secondary)' }}>View and manage your daily tasks.</p>
@@ -494,7 +494,7 @@ export default function Tasks({ user }) {
               initial={{ opacity: 0, scale: 0.96, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 15 }}
-              className="bg-white border border-slate-100 rounded-2xl shadow-modal w-full max-w-md overflow-hidden z-10"
+              className="bg-white border border-slate-100 rounded-2xl shadow-modal w-full max-w-md overflow-hidden z-10 flex flex-col max-h-[90vh]"
             >
               {/* Modal Header */}
               <div className="flex justify-between items-center px-6 py-4.5 border-b border-slate-100">
@@ -511,9 +511,9 @@ export default function Tasks({ user }) {
               </div>
 
               {/* Modal Input Fields Form */}
-              <form onSubmit={(e) => handleSaveTask(e, true)}>
+              <form onSubmit={(e) => handleSaveTask(e, true)} className="overflow-y-auto">
                 <div className="px-6 py-5 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Status State</label>
                       <select
@@ -542,7 +542,7 @@ export default function Tasks({ user }) {
                   </div>
 
                   {/* Task Title + Location Row */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Task Title</label>
                       <input
@@ -662,7 +662,7 @@ export default function Tasks({ user }) {
               initial={{ opacity: 0, scale: 0.96, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 15 }}
-              className="bg-white border border-slate-100 rounded-2xl shadow-modal w-full max-w-md overflow-hidden z-10 flex flex-col"
+              className="bg-white border border-slate-100 rounded-2xl shadow-modal w-full max-w-md overflow-hidden z-10 flex flex-col max-h-[90vh]"
             >
               {/* Header */}
               <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50/50">
@@ -701,7 +701,7 @@ export default function Tasks({ user }) {
                 <div className="h-px bg-slate-100 w-full my-3"></div>
 
                 {/* Metadata Grid parameters */}
-                <div className="grid grid-cols-2 gap-4 text-xs ml-7.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs ml-7.5">
                   <div className="flex flex-col gap-1">
                     <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wide">Status State</span>
                     <span className="font-semibold text-slate-705 flex items-center gap-1.5 mt-0.5">
