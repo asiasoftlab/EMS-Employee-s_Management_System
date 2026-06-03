@@ -14,6 +14,26 @@ export const createTask = asyncHandler(async (req, res) => {
     throw new Error('Please add title, description, and deadline');
   }
 
+  // Prevent task creation on approved leave days
+  const taskDeadline = new Date(deadline).toISOString().split('T')[0];
+  const leavesSnapshot = await db.collection('leaves')
+    .where('userId', '==', req.user._id)
+    .where('status', '==', 'Approved')
+    .get();
+
+  let isOnLeave = false;
+  leavesSnapshot.forEach(doc => {
+    const leave = doc.data();
+    if (taskDeadline >= leave.startDate && taskDeadline <= leave.endDate) {
+      isOnLeave = true;
+    }
+  });
+
+  if (isOnLeave) {
+    res.status(400);
+    throw new Error('You cannot be assigned a task on a day you are on an approved leave.');
+  }
+
   const newTask = {
     employeeId: req.user._id,
     employeeName: req.user.name || '',
@@ -109,6 +129,28 @@ export const updateTask = asyncHandler(async (req, res) => {
   const updatedData = {
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
   };
+
+  // Prevent task update to an approved leave day
+  if (deadline !== undefined && deadline) {
+    const taskDeadline = new Date(deadline).toISOString().split('T')[0];
+    const leavesSnapshot = await db.collection('leaves')
+      .where('userId', '==', taskData.employeeId)
+      .where('status', '==', 'Approved')
+      .get();
+
+    let isOnLeave = false;
+    leavesSnapshot.forEach(doc => {
+      const leave = doc.data();
+      if (taskDeadline >= leave.startDate && taskDeadline <= leave.endDate) {
+        isOnLeave = true;
+      }
+    });
+
+    if (isOnLeave) {
+      res.status(400);
+      throw new Error('You cannot update a task deadline to a day you are on an approved leave.');
+    }
+  }
 
   if (title !== undefined) updatedData.title = title;
   if (description !== undefined) updatedData.description = description;

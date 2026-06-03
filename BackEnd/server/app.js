@@ -10,6 +10,7 @@ import notificationRoutes from './src/routes/notificationRoutes.js';
 import chatRoutes from './src/routes/chatRoutes.js';
 import noticeRoutes from './src/routes/noticeRoutes.js';
 import attendanceRoutes from './src/routes/attendanceRoutes.js';
+import leaveRoutes from './src/routes/leaveRoutes.js';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/leaves', leaveRoutes);
 
 // Root route
 app.get('/', (req, res) => {

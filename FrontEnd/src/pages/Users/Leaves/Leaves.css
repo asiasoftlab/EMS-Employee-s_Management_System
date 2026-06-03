@@ -1,0 +1,438 @@
+.leaves-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.leaves-header-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.leaves-header-subtitle {
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.leaves-refresh-btn, .leaves-apply-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.leaves-refresh-btn:hover {
+  background: var(--bg-secondary);
+}
+
+.leaves-apply-btn {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.leaves-apply-btn:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.leaves-apply-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.leaves-action-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.leaves-empty-state {
+  padding: 3rem;
+  text-align: center;
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px dashed var(--border-color);
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.leaves-table-wrapper {
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.leaves-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaves-th {
+  background: var(--bg-secondary);
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.leaves-td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.leaves-tr:last-child .leaves-td {
+  border-bottom: none;
+}
+
+.leaves-tr:hover {
+  background: rgba(0, 0, 0, 0.01);
+}
+
+.leave-status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Status Colors */
+.leave-status-pending {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.leave-status-approved {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.leave-status-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Modal Styles */
+.leave-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(2px);
+}
+
+.leave-modal {
+  background: var(--card-bg);
+  width: 100%;
+  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.leave-modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.leave-modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.leave-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+
+.leave-modal-close:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.leave-form {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.leave-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.leave-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.leave-input, .leave-select, .leave-textarea {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.leave-input:focus, .leave-select:focus, .leave-textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.leave-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.leave-rules-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.875rem;
+  font-size: 0.8rem;
+  color: #475569;
+  line-height: 1.5;
+  margin-top: 0.25rem;
+}
+
+.leave-rules-box strong {
+  color: #334155;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.leave-rules-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.leave-rules-list li {
+  margin-bottom: 0.35rem;
+}
+
+.leave-rules-list li strong {
+  display: inline;
+  color: #ef4444; /* red for emphasis on rules */
+}
+
+.leave-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.leave-btn-cancel {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.leave-btn-cancel:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.leave-btn-submit {
+  padding: 0.5rem 1.25rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.leave-btn-submit:hover {
+  background: #1d4ed8;
+}
+
+.leave-btn-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.leave-date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Leave Stats Classes */
+.leave-stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.leave-stat-card {
+  background: var(--card-bg);
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.leave-stat-card.warning-bg {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.leave-stat-title {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.leave-stat-title.danger-text {
+  color: #991b1b;
+}
+
+.leave-stat-value {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.leave-stat-value.danger {
+  color: #ef4444;
+}
+
+.leave-stat-sub {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-weight: normal;
+}
+
+.leave-stat-note {
+  font-size: 0.75rem;
+  color: #b91c1c;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+/* Table Actions */
+.leave-actions-cell {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.leave-action-btn {
+  background: transparent;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.leave-action-btn.edit-btn {
+  border: 1px solid #3b82f6;
+  color: #3b82f6;
+}
+
+.leave-action-btn.edit-btn:hover {
+  background: #eff6ff;
+}
+
+.leave-action-btn.cancel-btn {
+  border: 1px solid #ef4444;
+  color: #ef4444;
+}
+
+.leave-action-btn.cancel-btn:hover {
+  background: #fef2f2;
+}
+
+/* Responsive Styles */
+@media screen and (max-width: 768px) {
+  .leaves-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .leaves-action-group {
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+
+
+  .leave-date-row {
+    grid-template-columns: 1fr;
+  }
+
+  .leave-modal {
+    margin: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .leave-form-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .leave-btn-submit, .leave-btn-cancel {
+    width: 100%;
+  }
+
+  .leave-rules-box {
+    margin-top: 1.5rem !important;
+  }
+}
