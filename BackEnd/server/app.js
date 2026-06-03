@@ -1,5 +1,4 @@
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import './src/config/db.js';
@@ -11,8 +10,6 @@ import notificationRoutes from './src/routes/notificationRoutes.js';
 import chatRoutes from './src/routes/chatRoutes.js';
 import noticeRoutes from './src/routes/noticeRoutes.js';
 import attendanceRoutes from './src/routes/attendanceRoutes.js';
-
-dotenv.config({ quiet: true });
 
 const app = express();
 
