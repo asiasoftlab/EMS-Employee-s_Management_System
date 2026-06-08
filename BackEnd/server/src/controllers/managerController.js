@@ -5,8 +5,11 @@ import { db } from '../config/db.js';
 // @route   GET /api/manager/employees
 // @access  Private (Manager only)
 export const getEmployees = asyncHandler(async (req, res) => {
-  const snapshot = await db.collection('users').where('role', '==', 'employee').get();
-  
+  // Query only by role to avoid requiring a composite index in Firestore
+  const snapshot = await db.collection('users')
+    .where('role', '==', 'employee')
+    .get();
+
   const employees = [];
   snapshot.forEach(doc => {
     const data = doc.data();
@@ -38,22 +41,27 @@ export const getAllTasks = asyncHandler(async (req, res) => {
     // it's better to fetch users individually or keep a cached map. 
     // This is a simple implementation:
     const usersRefs = Array.from(userIds).map(id => db.collection('users').doc(id));
-    if(usersRefs.length > 0) {
-        const usersDocs = await db.getAll(...usersRefs);
-        usersDocs.forEach(doc => {
-            if(doc.exists) {
-                const data = doc.data();
-                usersMap[doc.id] = { name: data.name, email: data.email, department: data.department };
-            }
-        });
+    if (usersRefs.length > 0) {
+      const usersDocs = await db.getAll(...usersRefs);
+      usersDocs.forEach(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          usersMap[doc.id] = { _id: doc.id, name: data.name, email: data.email, department: data.department, isOnline: data.isOnline };
+        }
+      });
     }
   }
 
-  // Combine
-  const populatedTasks = tasks.map(task => ({
-    ...task,
-    employeeId: usersMap[task.employeeId] || { name: 'Unknown' }
-  }));
+  // Combine tasks with employee data
+  const populatedTasks = tasks
+    .filter(task => {
+      const user = usersMap[task.employeeId];
+      return user !== undefined;
+    })
+    .map(task => ({
+      ...task,
+      employeeId: usersMap[task.employeeId]
+    }));
 
   res.status(200).json(populatedTasks);
 });
@@ -103,7 +111,7 @@ export const getEmployeeTasksById = asyncHandler(async (req, res) => {
       } else if (data.deadline.toDate) {
         deadlineStr = data.deadline.toDate().toISOString().split('T')[0];
       } else {
-        try { deadlineStr = new Date(data.deadline).toISOString().split('T')[0]; } catch {}
+        try { deadlineStr = new Date(data.deadline).toISOString().split('T')[0]; } catch { }
       }
     }
 

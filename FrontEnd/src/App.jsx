@@ -15,6 +15,7 @@ import ReadMe from './pages/Users/Readme/readMe';
 import Loading from './components/Loading/Loading';
 import AdminDashboard from './pages/Admin/Dashboard/AdminDashboard';
 import AdminLogin from './pages/Admin/Login/AdminLogin';
+import AdminLeaves from './pages/Admin/Leaves/AdminLeaves';
 import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
 import { useLocation } from 'react-router-dom';
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/notice" element={user ? (user.role === "employee" ? <NoticeBoard user={user} /> : <Navigate to="/admin" replace />) : <Navigate to="/login" replace />} />
           <Route path="/profile" element={user ? (user.role === "employee" ? <Profile user={user} /> : <Navigate to="/admin" replace />) : <Navigate to="/login" replace />} />
           <Route path="/admin" element={user && (user.role === 'admin' || user.role === 'manager') ? (<AdminDashboard user={user} />) : (<Navigate to={user ? "/" : "/admin/login"} />)} />
+          <Route path="/admin/leaves" element={user && (user.role === 'admin' || user.role === 'manager') ? (<AdminLeaves user={user} />) : (<Navigate to={user ? "/" : "/admin/login"} />)} />
           <Route path="/login" element={!user ? <Login setUser={setUser} /> : <Navigate to="/" />} />
           <Route path="/admin/login" element={user && (user.role === 'admin' || user.role === 'manager') ? (<Navigate to="/admin" replace />) : (<AdminLogin setUser={setUser} />)} />
           <Route path="/register" element={!user ? <Register setUser={setUser} /> : <Navigate to="/" />} />

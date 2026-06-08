@@ -376,6 +376,11 @@ export default function Leaves({ user }) {
                       <td className="leaves-td" style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={leave.reason}>
                         <FileText size={14} style={{ display: 'inline', marginRight: '4px', color: 'var(--text-secondary)' }} />
                         {leave.reason}
+                        {leave.status === 'Rejected' && leave.rejectReason && (
+                          <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '4px', whiteSpace: 'normal', lineHeight: '1.2' }}>
+                            <strong>Rejection Reason:</strong> {leave.rejectReason}
+                          </div>
+                        )}
                       </td>
                       <td className="leaves-td" style={{ color: 'var(--text-secondary)' }}>
                         {formatDate(leave.appliedOn)}

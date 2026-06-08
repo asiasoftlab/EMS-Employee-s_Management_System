@@ -88,7 +88,7 @@ export const getAllLeaves = asyncHandler(async (req, res) => {
 // @route   PATCH /api/leaves/:id/status
 // @access  Private (Manager)
 export const updateLeaveStatus = asyncHandler(async (req, res) => {
-  const { status } = req.body;
+  const { status, rejectReason } = req.body;
   const leaveRef = db.collection('leaves').doc(req.params.id);
   const leaveDoc = await leaveRef.get();
 
@@ -99,10 +99,16 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
 
   const leaveData = leaveDoc.data();
 
-  await leaveRef.update({
+  const updateData = {
     status,
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
-  });
+  };
+
+  if (status === 'Rejected' && rejectReason) {
+    updateData.rejectReason = rejectReason;
+  }
+
+  await leaveRef.update(updateData);
 
   // If approved, create attendance records
   if (status === 'Approved') {

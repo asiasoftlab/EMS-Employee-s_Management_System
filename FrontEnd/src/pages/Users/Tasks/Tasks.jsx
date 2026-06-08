@@ -76,6 +76,7 @@ export default function Tasks({ user }) {
 
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchTasks();
     }
   }, [user]);

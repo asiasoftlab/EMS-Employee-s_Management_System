@@ -3,6 +3,7 @@ import axios from '../../../config/axiosConfig';
 import { socket } from '../../../config/socket';
 import { Power, RefreshCw, Briefcase, Filter, ClipboardList, Clock, X, CheckCircle2, Circle, AlertCircle, User, Calendar, Tag, FileText, AlignLeft, Hash, MapPin, MessageSquare, Send, Megaphone, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import './AdminDashboard.css';
 
 const formatDate = (ts) => {
@@ -20,7 +21,7 @@ const formatTs = (ms) => {
 };
 
 export default function AdminDashboard({ user }) {
-  if (!user || (user.role !== 'admin' && user.role !== 'manager')) return null;
+  const navigate = useNavigate();
 
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,18 +46,38 @@ export default function AdminDashboard({ user }) {
   const [noticeContent, setNoticeContent] = useState('');
   const [noticesLoading, setNoticesLoading] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(true);
+  const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+  const [showOfflineOnly, setShowOfflineOnly] = useState(false);
+
+  // Leave Management State
+  const [adminLeaves, setAdminLeaves] = useState([]);
+  const [leavesLoading, setLeavesLoading] = useState(false);
 
   const fetchNoticesAdmin = async () => {
     setNoticesLoading(true);
     try {
       const res = await axios.get('/api/notices');
       setAdminNotices(res.data || []);
-    } catch(err) {
+    } catch (err) {
       toast.error('Failed to load notices');
     } finally {
       setNoticesLoading(false);
     }
   };
+
+  const fetchLeavesAdmin = async () => {
+    setLeavesLoading(true);
+    try {
+      const res = await axios.get('/api/leaves/all');
+      setAdminLeaves(res.data || []);
+    } catch (err) {
+      toast.error('Failed to load leaves');
+    } finally {
+      setLeavesLoading(false);
+    }
+  };
+
+  const pendingLeavesCount = adminLeaves.filter(l => l.status === 'Pending').length;
 
   useEffect(() => {
     if (showNoticeModal) fetchNoticesAdmin();
@@ -72,7 +93,7 @@ export default function AdminDashboard({ user }) {
       setNoticeContent('');
       toast.success('Notice published');
       // Broadcast update could be done here if needed
-    } catch(err) {
+    } catch (err) {
       toast.error('Failed to create notice');
     }
   };
@@ -82,7 +103,7 @@ export default function AdminDashboard({ user }) {
       await axios.delete(`/api/notices/${id}`);
       setAdminNotices(adminNotices.filter(n => n.id !== id));
       toast.success('Notice deleted');
-    } catch(err) {
+    } catch (err) {
       toast.error('Failed to delete notice');
     }
   };
@@ -130,6 +151,7 @@ export default function AdminDashboard({ user }) {
   useEffect(() => {
     fetchEmployees();
     fetchAllTasksSummary();
+    fetchLeavesAdmin();
   }, []);
 
   useEffect(() => {
@@ -188,11 +210,15 @@ export default function AdminDashboard({ user }) {
   useEffect(() => {
     if (showChatModal) {
       setTimeout(() => chatInputRef.current?.focus(), 100);
-    } else {
+    }
+  }, [showChatModal]);
+
+  useEffect(() => {
+    if (!showChatModal) {
       setChatMessages([]);
       setChatInput('');
     }
-  }, [showChatModal]);
+  }, [showChatModal, setChatMessages, setChatInput]);
 
   const handleLogout = async () => {
     try {
@@ -200,6 +226,7 @@ export default function AdminDashboard({ user }) {
       localStorage.removeItem('token');
       window.location.href = '/admin/login';
     } catch (err) {
+      console.error(err);
       localStorage.removeItem('token');
       window.location.href = '/admin/login';
     }
@@ -213,7 +240,10 @@ export default function AdminDashboard({ user }) {
       e.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.department?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchDept = filterDept === 'All' || e.department === filterDept;
-    return matchSearch && matchDept;
+    let matchOnline = true;
+    if (showOnlineOnly) matchOnline = e.isOnline;
+    else if (showOfflineOnly) matchOnline = !e.isOnline;
+    return matchSearch && matchDept && matchOnline;
   });
 
   const getInitials = (name) => {
@@ -230,6 +260,21 @@ export default function AdminDashboard({ user }) {
     taskCountMap[id].total++;
     if (t.status === 'Completed') taskCountMap[id].completed++;
     else taskCountMap[id].active++;
+  });
+
+  const locationMap = {};
+  allTasks.forEach(t => {
+    const id = typeof t.employeeId === 'string' ? t.employeeId : t.employeeId?._id;
+    if (!id || !t.location) return;
+
+    let ts = 0;
+    if (t.createdAt) {
+      ts = typeof t.createdAt === 'number' ? t.createdAt : (t.createdAt._seconds ? t.createdAt._seconds * 1000 : new Date(t.createdAt).getTime());
+    }
+
+    if (!locationMap[id] || ts > locationMap[id].ts) {
+      locationMap[id] = { location: t.location, ts };
+    }
   });
 
   const handleSendChatMessage = async (e) => {
@@ -282,9 +327,8 @@ export default function AdminDashboard({ user }) {
 
   const statusClass = { Pending: 'status-pending', 'In Progress': 'status-inprogress', Completed: 'status-completed' };
   const priorityClass = { High: 'priority-high', Medium: 'priority-medium', Low: 'priority-low' };
-  const priorityColor = { High: '#ef4444', Medium: '#f59e0b', Low: '#10b981' };
 
-
+  if (!user || (user.role !== 'admin' && user.role !== 'manager')) return null;
 
   return (
     <div className="admin-dashboard-container">
@@ -306,6 +350,32 @@ export default function AdminDashboard({ user }) {
               {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
             </select>
           </div>
+          <div className="filter-dropdown-wrapper" style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '16px', padding: '0 8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <input
+                type="checkbox"
+                id="online-toggle"
+                checked={showOnlineOnly}
+                onChange={e => { setShowOnlineOnly(e.target.checked); if (e.target.checked) setShowOfflineOnly(false); }}
+                style={{ cursor: 'pointer', margin: 0 }}
+              />
+              <label htmlFor="online-toggle" style={{ fontSize: '13px', color: '#475569', cursor: 'pointer', userSelect: 'none', margin: 0 }}>
+                Online
+              </label>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <input
+                type="checkbox"
+                id="offline-toggle"
+                checked={showOfflineOnly}
+                onChange={e => { setShowOfflineOnly(e.target.checked); if (e.target.checked) setShowOnlineOnly(false); }}
+                style={{ cursor: 'pointer', margin: 0 }}
+              />
+              <label htmlFor="offline-toggle" style={{ fontSize: '13px', color: '#475569', cursor: 'pointer', userSelect: 'none', margin: 0 }}>
+                Offline
+              </label>
+            </div>
+          </div>
         </div>
 
         <div className="presence-lists-scrollable">
@@ -324,7 +394,6 @@ export default function AdminDashboard({ user }) {
           ) : (
             <div className="emp-card-grid">
               {filteredEmployees.map(emp => {
-                const counts = taskCountMap[emp._id] || { total: 0, completed: 0, active: 0 };
                 const isSelected = selectedEmp?._id === emp._id;
                 return (
                   <div
@@ -347,6 +416,14 @@ export default function AdminDashboard({ user }) {
                           {emp.department || 'General'}
                         </span>
                       </div>
+
+                      {/* Latest Location Badge (only for online employees) */}
+                      {emp.isOnline && locationMap[emp._id]?.location && (
+                        <div className="ml-auto flex items-center gap-1.5 text-[11px] text-slate-1000 self-center" title={locationMap[emp._id].location}>
+                          <MapPin size={12} className="shrink-0" />
+                          <span className="truncate max-w-[80px]">{locationMap[emp._id].location}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -372,11 +449,24 @@ export default function AdminDashboard({ user }) {
           <div className="header-actions">
             <button
               className="refresh-btn"
+              onClick={() => navigate('/admin/leaves')}
+              title="Manage Leaves"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', padding: '0 12px', position: 'relative' }}
+            >
+              <Calendar size={16} /> Leaves
+              {pendingLeavesCount > 0 && (
+                <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '10px', fontWeight: 'bold' }}>
+                  {pendingLeavesCount}
+                </span>
+              )}
+            </button>
+            <button
+              className="refresh-btn"
               onClick={() => setShowNoticeModal(true)}
               title="Manage Notices"
               style={{ display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', padding: '0 12px' }}
             >
-              <Megaphone size={16} /> Manage Notices
+              <Megaphone size={16} /> Notices
             </button>
             <button
               className={`refresh-btn ${refreshing ? 'loading' : ''}`}
@@ -724,7 +814,7 @@ export default function AdminDashboard({ user }) {
                 <X size={18} />
               </button>
             </div>
-            
+
             <div className="task-modal-body" style={{ overflowY: 'auto', padding: '20px' }}>
               <form onSubmit={handleCreateNotice} style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
                 <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: '#334155' }}>Create New Notice</h3>
@@ -757,7 +847,7 @@ export default function AdminDashboard({ user }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {adminNotices.map(notice => (
                     <div key={notice.id} style={{ padding: '15px', border: '1px solid #e2e8f0', borderRadius: '12px', position: 'relative' }}>
-                      <button 
+                      <button
                         onClick={() => handleDeleteNotice(notice.id)}
                         style={{ position: 'absolute', top: '15px', right: '15px', background: '#fef2f2', color: '#ef4444', border: 'none', width: '28px', height: '28px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                         title="Delete Notice"
