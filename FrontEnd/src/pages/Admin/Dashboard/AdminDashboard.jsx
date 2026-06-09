@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from '../../../config/axiosConfig';
 import { socket } from '../../../config/socket';
-import { Power, RefreshCw, Briefcase, Filter, ClipboardList, Clock, X, CheckCircle2, Circle, AlertCircle, User, Calendar, Tag, FileText, AlignLeft, Hash, MapPin, MessageSquare, Send, Megaphone, Trash2 } from 'lucide-react';
+import { Power, RefreshCw, Briefcase, Filter, ClipboardList, Clock, X, CheckCircle2, Circle, AlertCircle, User, Calendar, Tag, FileText, AlignLeft, Hash, MapPin, MessageSquare, Send, Megaphone, Trash2, Download, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import './AdminDashboard.css';
 
 const formatDate = (ts) => {
@@ -46,12 +49,141 @@ export default function AdminDashboard({ user }) {
   const [noticeContent, setNoticeContent] = useState('');
   const [noticesLoading, setNoticesLoading] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(true);
-  const [showOnlineOnly, setShowOnlineOnly] = useState(false);
-  const [showOfflineOnly, setShowOfflineOnly] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('All');
 
   // Leave Management State
   const [adminLeaves, setAdminLeaves] = useState([]);
   const [leavesLoading, setLeavesLoading] = useState(false);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+
+  const getEmployeeStatus = (emp) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isOnLeave = adminLeaves.some(leave => {
+      if (leave.userName !== emp.name || leave.status !== 'Approved') return false;
+      const start = new Date(leave.startDate?._seconds ? leave.startDate._seconds * 1000 : leave.startDate);
+      const end = new Date(leave.endDate?._seconds ? leave.endDate._seconds * 1000 : leave.endDate);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return today >= start && today <= end;
+    });
+
+    if (isOnLeave) return 'On Leave';
+    if (!emp.isOnline) return 'Offline';
+    
+    if (emp.lastActiveAt) {
+      const lastActive = new Date(emp.lastActiveAt._seconds ? emp.lastActiveAt._seconds * 1000 : emp.lastActiveAt).getTime();
+      if (Date.now() - lastActive > 15 * 60 * 1000) return 'Away';
+    }
+    return 'Online';
+  };
+
+  const exportEmployeesExcel = () => {
+    if (!employees || employees.length === 0) return toast.warning('No employees to export');
+    const data = employees.map(emp => ({
+      Date: formatDate(emp.createdAt),
+      Name: emp.name || '',
+      Email: emp.email || '',
+      Department: emp.department || 'General',
+      Role: emp.role || 'employee',
+      Status: getEmployeeStatus(emp)
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+    XLSX.writeFile(workbook, "employees_list.xlsx");
+    setShowDownloadMenu(false);
+  };
+
+  const exportEmployeesPDF = () => {
+    if (!employees || employees.length === 0) return toast.warning('No employees to export');
+    const doc = new jsPDF();
+    doc.text("Employees List", 14, 15);
+    const tableData = employees.map(emp => [
+      formatDate(emp.createdAt),
+      emp.name || '',
+      emp.email || '',
+      emp.department || 'General',
+      emp.role || 'employee',
+      getEmployeeStatus(emp)
+    ]);
+    autoTable(doc, {
+      head: [['Date','Name', 'Email', 'Department', 'Role', 'Status']],
+      body: tableData,
+      startY: 20
+    });
+    doc.save("employees_list.pdf");
+    setShowDownloadMenu(false);
+  };
+
+  const exportTasksExcel = () => {
+    if (!selectedEmp) return toast.warning('Please select an employee first');
+    if (!empTasks || empTasks.length === 0) return toast.warning('No tasks to export');
+    const data = empTasks.map(task => ({
+      Title: task.title || '',
+      Description: task.description || task.notes || '',
+      Status: task.status || '',
+      Priority: task.priority || '',
+      Deadline: task.deadline ? formatDate(task.deadline) : '',
+      Location: task.location || ''
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
+    XLSX.writeFile(workbook, `${selectedEmp.name.replace(/\s+/g, '_')}_tasks.xlsx`);
+    setShowDownloadMenu(false);
+  };
+
+  const exportTasksPDF = () => {
+    if (!selectedEmp) return toast.warning('Please select an employee first');
+    if (!empTasks || empTasks.length === 0) return toast.warning('No tasks to export');
+    const doc = new jsPDF();
+    doc.text(`${selectedEmp.name} - Tasks`, 14, 15);
+    const tableData = empTasks.map(task => [
+      task.title || '',
+      task.status || '',
+      task.priority || '',
+      task.deadline ? formatDate(task.deadline) : '',
+      task.location || ''
+    ]);
+    autoTable(doc, {
+      head: [['Title', 'Status', 'Priority', 'Deadline', 'Location']],
+      body: tableData,
+      startY: 20
+    });
+    doc.save(`${selectedEmp.name.replace(/\s+/g, '_')}_tasks.pdf`);
+    setShowDownloadMenu(false);
+  };
+
+  const exportAllDataExcel = () => {
+    const workbook = XLSX.utils.book_new();
+    
+    // Employees Sheet
+    const empData = employees.map(emp => ({ Date: formatDate(emp.createdAt), Name: emp.name, Email: emp.email, Department: emp.department, Status: getEmployeeStatus(emp) }));
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(empData), "Employees");
+
+    // Tasks Sheet
+    const tasksData = allTasks.map(task => ({
+      EmployeeId: typeof task.employeeId === 'string' ? task.employeeId : task.employeeId?._id,
+      Title: task.title || '',
+      Status: task.status || '',
+      Deadline: task.deadline ? formatDate(task.deadline) : ''
+    }));
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(tasksData), "Tasks");
+
+    // Leaves Sheet
+    const leavesData = adminLeaves.map(leave => ({
+      EmployeeName: leave.userName || '',
+      Type: leave.leaveType || '',
+      Status: leave.status || '',
+      StartDate: formatDate(leave.startDate),
+      EndDate: formatDate(leave.endDate)
+    }));
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(leavesData), "Leaves");
+
+    XLSX.writeFile(workbook, "all_system_data.xlsx");
+    setShowDownloadMenu(false);
+  };
 
   const fetchNoticesAdmin = async () => {
     setNoticesLoading(true);
@@ -240,10 +372,9 @@ export default function AdminDashboard({ user }) {
       e.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.department?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchDept = filterDept === 'All' || e.department === filterDept;
-    let matchOnline = true;
-    if (showOnlineOnly) matchOnline = e.isOnline;
-    else if (showOfflineOnly) matchOnline = !e.isOnline;
-    return matchSearch && matchDept && matchOnline;
+    const empStatus = getEmployeeStatus(e);
+    const matchStatus = filterStatus === 'All' || empStatus === filterStatus;
+    return matchSearch && matchDept && matchStatus;
   });
 
   const getInitials = (name) => {
@@ -350,31 +481,15 @@ export default function AdminDashboard({ user }) {
               {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
             </select>
           </div>
-          <div className="filter-dropdown-wrapper" style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '16px', padding: '0 8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <input
-                type="checkbox"
-                id="online-toggle"
-                checked={showOnlineOnly}
-                onChange={e => { setShowOnlineOnly(e.target.checked); if (e.target.checked) setShowOfflineOnly(false); }}
-                style={{ cursor: 'pointer', margin: 0 }}
-              />
-              <label htmlFor="online-toggle" style={{ fontSize: '13px', color: '#475569', cursor: 'pointer', userSelect: 'none', margin: 0 }}>
-                Online
-              </label>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <input
-                type="checkbox"
-                id="offline-toggle"
-                checked={showOfflineOnly}
-                onChange={e => { setShowOfflineOnly(e.target.checked); if (e.target.checked) setShowOnlineOnly(false); }}
-                style={{ cursor: 'pointer', margin: 0 }}
-              />
-              <label htmlFor="offline-toggle" style={{ fontSize: '13px', color: '#475569', cursor: 'pointer', userSelect: 'none', margin: 0 }}>
-                Offline
-              </label>
-            </div>
+          <div className="filter-dropdown-wrapper" style={{ marginTop: '8px' }}>
+            <Filter className="filter-icon" size={14} />
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="dept-select">
+              <option value="All">All Statuses</option>
+              <option value="Online">Online</option>
+              <option value="Away">Away</option>
+              <option value="Offline">Offline</option>
+              <option value="On Leave">On Leave</option>
+            </select>
           </div>
         </div>
 
@@ -395,19 +510,21 @@ export default function AdminDashboard({ user }) {
             <div className="emp-card-grid">
               {filteredEmployees.map(emp => {
                 const isSelected = selectedEmp?._id === emp._id;
+                const status = getEmployeeStatus(emp);
+                const statusClass = status === 'Online' ? 'online' : status === 'Away' ? 'away' : status === 'On Leave' ? 'on-leave' : 'offline';
                 return (
                   <div
                     key={emp._id}
-                    className={`emp-card ${isSelected ? 'emp-card--selected' : ''} ${emp.isOnline ? 'emp-card--online' : 'emp-card--offline'}`}
+                    className={`emp-card ${isSelected ? 'emp-card--selected' : ''} emp-card--${statusClass}`}
                     onClick={() => { fetchEmpTasks(emp); setShowMobileSidebar(false); }}
-                    title={`View ${emp.name}'s tasks`}
+                    title={`Status: ${status}`}
                   >
                     <div className="emp-card-top">
                       <div className="emp-card-avatar-wrap">
-                        <div className={`emp-card-avatar ${emp.isOnline ? 'avatar-present' : 'avatar-absent'}`}>
+                        <div className={`emp-card-avatar avatar-${statusClass}`}>
                           {getInitials(emp.name)}
                         </div>
-                        <span className={`emp-card-status-dot ${emp.isOnline ? 'dot-online' : 'dot-offline'}`}></span>
+                        <span className={`emp-card-status-dot dot-${statusClass}`} title={status}></span>
                       </div>
                       <div className="emp-card-info">
                         <span className="emp-card-name">{emp.name}</span>
@@ -468,6 +585,62 @@ export default function AdminDashboard({ user }) {
             >
               <Megaphone size={16} /> Notices
             </button>
+            <div style={{ position: 'relative' }}>
+              <button
+                className="refresh-btn"
+                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                title="Download Data"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', padding: '0 12px' }}
+              >
+                <Download size={16} /> Download
+              </button>
+              {showDownloadMenu && (
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', zIndex: 50, minWidth: '220px', overflow: 'hidden' }}>
+                  <button 
+                    onClick={exportEmployeesExcel}
+                    style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '13px', color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    onMouseOver={(e) => e.target.style.background = '#f8fafc'}
+                    onMouseOut={(e) => e.target.style.background = 'transparent'}
+                  >
+                    <FileSpreadsheet size={14} color="#10b981" /> Employees (Excel)
+                  </button>
+                  <button 
+                    onClick={exportEmployeesPDF}
+                    style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '13px', color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    onMouseOver={(e) => e.target.style.background = '#f8fafc'}
+                    onMouseOut={(e) => e.target.style.background = 'transparent'}
+                  >
+                    <FileText size={14} color="#ef4444" /> Employees (PDF)
+                  </button>
+                  <button 
+                    onClick={exportTasksExcel}
+                    disabled={!selectedEmp}
+                    style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: !selectedEmp ? 'not-allowed' : 'pointer', fontSize: '13px', color: !selectedEmp ? '#94a3b8' : '#334155', display: 'flex', alignItems: 'center', gap: '8px', opacity: !selectedEmp ? 0.6 : 1 }}
+                    onMouseOver={(e) => !selectedEmp ? null : e.target.style.background = '#f8fafc'}
+                    onMouseOut={(e) => !selectedEmp ? null : e.target.style.background = 'transparent'}
+                  >
+                    <FileSpreadsheet size={14} color="#10b981" /> Selected Employee (Excel)
+                  </button>
+                  <button 
+                    onClick={exportTasksPDF}
+                    disabled={!selectedEmp}
+                    style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: !selectedEmp ? 'not-allowed' : 'pointer', fontSize: '13px', color: !selectedEmp ? '#94a3b8' : '#334155', display: 'flex', alignItems: 'center', gap: '8px', opacity: !selectedEmp ? 0.6 : 1 }}
+                    onMouseOver={(e) => !selectedEmp ? null : e.target.style.background = '#f8fafc'}
+                    onMouseOut={(e) => !selectedEmp ? null : e.target.style.background = 'transparent'}
+                  >
+                    <FileText size={14} color="#ef4444" /> Selected Employee (PDF)
+                  </button>
+                  <button 
+                    onClick={exportAllDataExcel}
+                    style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    onMouseOver={(e) => e.target.style.background = '#f8fafc'}
+                    onMouseOut={(e) => e.target.style.background = 'transparent'}
+                  >
+                    <FileSpreadsheet size={14} color="#10b981" /> All Data (Excel)
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               className={`refresh-btn ${refreshing ? 'loading' : ''}`}
               onClick={() => { fetchEmployees(true); fetchAllTasksSummary(); if (selectedEmp) fetchEmpTasks(selectedEmp); }}

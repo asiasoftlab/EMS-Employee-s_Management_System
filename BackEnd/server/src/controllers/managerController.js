@@ -46,7 +46,7 @@ export const getAllTasks = asyncHandler(async (req, res) => {
       usersDocs.forEach(doc => {
         if (doc.exists) {
           const data = doc.data();
-          usersMap[doc.id] = { _id: doc.id, name: data.name, email: data.email, department: data.department, isOnline: data.isOnline };
+          usersMap[doc.id] = { _id: doc.id, name: data.name, email: data.email, department: data.department, isOnline: data.isOnline, lastActiveAt: data.lastActiveAt };
         }
       });
     }

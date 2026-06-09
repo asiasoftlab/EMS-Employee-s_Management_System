@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5174,
   },
   build: {
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1600,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -18,6 +18,12 @@ export default defineConfig({
             }
             if (id.includes('lucide-react')) {
               return 'vendor-icons';
+            }
+            if (id.includes('xlsx')) {
+              return 'vendor-xlsx';
+            }
+            if (id.includes('jspdf')) {
+              return 'vendor-jspdf';
             }
             return 'vendor'; 
           }

@@ -265,3 +265,15 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
     token,
   });
 });
+
+// @desc    Update user activity
+// @route   POST /api/auth/activity
+// @access  Private
+export const updateActivity = asyncHandler(async (req, res) => {
+  if (req.user) {
+    await db.collection('users').doc(req.user._id).update({
+      lastActiveAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  }
+  res.status(200).json({ success: true });
+});

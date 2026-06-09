@@ -3,6 +3,7 @@ import axios from '../../../config/axiosConfig';
 import { toast } from 'react-toastify';
 import { Calendar, Tag, CheckCircle2, X, RefreshCw, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import './AdminLeaves.css';
 
 const formatDate = (ts) => {
   if (!ts) return '—';
@@ -15,8 +16,6 @@ const formatDate = (ts) => {
 export default function AdminLeaves({ user }) {
   const [adminLeaves, setAdminLeaves] = useState([]);
   const [leavesLoading, setLeavesLoading] = useState(false);
-  
-  // State for rejection modal
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [leaveToReject, setLeaveToReject] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -59,6 +58,22 @@ export default function AdminLeaves({ user }) {
     setLeaveToReject(leaveId);
     setShowRejectModal(true);
   };
+  const totalDays = (startDate, endDate) => {
+    if (!startDate || !endDate) return 0;
+    
+    const parseDate = (ts) => {
+      const secs = ts._seconds ?? ts.seconds;
+      if (secs !== undefined) return new Date(secs * 1000);
+      return new Date(ts);
+    };
+
+    const start = parseDate(startDate);
+    const end = parseDate(endDate);
+    
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays + 1; // +1 to make it inclusive
+  };
 
   const submitReject = () => {
     if (!rejectReason.trim()) {
@@ -71,8 +86,8 @@ export default function AdminLeaves({ user }) {
   const statusClass = { Pending: 'status-pending', 'In Progress': 'status-inprogress', Completed: 'status-completed' };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+    <div className="admin-leaves-container">
+      <header className="admin-leaves-header">
         <Link to="/admin" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
           <ArrowLeft size={16} /> Back to Dashboard
         </Link>
@@ -86,7 +101,7 @@ export default function AdminLeaves({ user }) {
         </button>
       </header>
 
-      <main style={{ flex: 1, padding: '24px', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
+      <main className="admin-leaves-main">
         {leavesLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px', color: '#64748b' }}>
             <RefreshCw className="animate-spin" size={24} style={{ marginRight: '8px' }} /> Loading leaves...
@@ -96,10 +111,10 @@ export default function AdminLeaves({ user }) {
             No leave requests found.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="leave-card-grid">
             {adminLeaves.map(leave => (
-              <div key={leave._id} style={{ background: leave.status === 'Pending' ? '#fffbeb' : '#fff', padding: '20px', borderRadius: '12px', border: '1px solid', borderColor: leave.status === 'Pending' ? '#fde68a' : '#e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+              <div key={leave._id} className={`leave-card ${leave.status === 'Pending' ? 'pending' : ''}`}>
+                <div className="leave-card-header">
                   <div>
                     <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 4px 0' }}>{leave.userName}</h3>
                     <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>{leave.userEmail || '—'}</p>
@@ -109,18 +124,22 @@ export default function AdminLeaves({ user }) {
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+                <div className="leave-card-details">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#475569', fontSize: '13px' }}>
                     <Tag size={14} color="#6366f1" /> <strong>Type:</strong> {leave.leaveType}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#475569', fontSize: '13px' }}>
                     <Calendar size={14} color="#10b981" /> <strong>Dates:</strong> {formatDate(leave.startDate)} to {formatDate(leave.endDate)}
                   </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#475569', fontSize: '13px' }}>
+                    <Calendar size={14} color="#10b981" /> <strong>Days:</strong> {totalDays(leave.startDate, leave.endDate)}
+                  </div>
                   {leave.halfDayShift && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#d97706', fontSize: '13px' }}>
                       <strong>Half Day:</strong> {leave.halfDayShift}
                     </div>
                   )}
+                  
                 </div>
 
                 <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
@@ -133,8 +152,9 @@ export default function AdminLeaves({ user }) {
                    </div>
                 )}
 
+
                 {leave.status === 'Pending' && (
-                  <div style={{ display: 'flex', gap: '12px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                  <div className="leave-card-actions">
                     <button 
                       onClick={() => handleUpdateLeaveStatus(leave._id, 'Approved')}
                       style={{ background: '#10b981', color: 'white', padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', transition: 'background 0.2s' }}
@@ -157,8 +177,8 @@ export default function AdminLeaves({ user }) {
 
       {/* Reject Modal */}
       {showRejectModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
-          <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+        <div className="modal-overlay">
+          <div className="reject-modal-content">
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', marginTop: 0, marginBottom: '16px' }}>Reject Leave Request</h3>
             <p style={{ fontSize: '13px', color: '#475569', marginBottom: '16px' }}>Please provide a reason for rejecting this leave request. This will be visible to the employee.</p>
             

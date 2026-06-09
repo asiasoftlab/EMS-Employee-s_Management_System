@@ -871,6 +871,14 @@
   border-left: 3px solid var(--accent-emerald);
 }
 
+.emp-card--away {
+  border-left: 3px solid var(--accent-amber);
+}
+
+.emp-card--on-leave {
+  border-left: 3px solid var(--accent-blue);
+}
+
 .emp-card--offline {
   border-left: 3px solid var(--text-light);
   opacity: 0.9;
@@ -899,6 +907,22 @@
   color: white;
 }
 
+.avatar-online {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+}
+
+.avatar-away {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.avatar-on-leave {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+}
+
+.avatar-offline {
+  background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+}
+
 .emp-card-status-dot {
   position: absolute;
   bottom: -1px;
@@ -911,6 +935,14 @@
 
 .dot-online {
   background-color: var(--accent-emerald);
+}
+
+.dot-away {
+  background-color: var(--accent-amber);
+}
+
+.dot-on-leave {
+  background-color: var(--accent-blue);
 }
 
 .dot-offline {

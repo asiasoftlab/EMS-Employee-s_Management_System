@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import axios from './config/axiosConfig';
 import Navbar from './pages/Users/Navbar/Navbar';
 import Login from './pages/Users/Login/Login';
 import Register from './pages/Users/Register/Register';
@@ -32,6 +33,42 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
+
+  // --- HEARTBEAT TRACKING ---
+  useEffect(() => {
+    if (!user || user.role !== 'employee') return;
+    
+    let isActive = true; // initially active
+    
+    const updateActivity = () => {
+      isActive = true;
+    };
+    
+    window.addEventListener('mousemove', updateActivity);
+    window.addEventListener('keydown', updateActivity);
+    window.addEventListener('click', updateActivity);
+    
+    const heartbeatInterval = setInterval(async () => {
+      if (isActive) {
+        try {
+          await axios.post('/auth/activity');
+          isActive = false; // reset until next user interaction
+        } catch (err) {
+          console.error('Failed to update activity heartbeat', err);
+        }
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    // Initial ping
+    axios.post('/auth/activity').catch(() => {});
+    
+    return () => {
+      window.removeEventListener('mousemove', updateActivity);
+      window.removeEventListener('keydown', updateActivity);
+      window.removeEventListener('click', updateActivity);
+      clearInterval(heartbeatInterval);
+    };
+  }, [user]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
