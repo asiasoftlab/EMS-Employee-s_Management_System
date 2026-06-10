@@ -18,7 +18,7 @@ export default function Attendance({ user }) {
       const { data } = await axios.get('/api/attendance');
       setRecords(data || []);
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
       const foundToday = data.find(r => r.date === today);
       setTodayRecord(foundToday || null);
     } catch (err) {
@@ -65,12 +65,12 @@ export default function Attendance({ user }) {
 
   const formatTime = (isoString) => {
     if (!isoString) return '--:--';
-    return new Date(isoString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    return new Date(isoString).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return new Date(dateString).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' });
   };
 
   if (!user) return null;
@@ -190,24 +190,26 @@ export default function Attendance({ user }) {
           ) : records.length === 0 ? (
             <div className="attendance-empty-state">No attendance records found.</div>
           ) : (
-            <div className="attendance-table-wrapper" style={{ overflowX: 'auto', width: '100%' }}>
+            <div className="attendance-table-wrapper">
               <table className="attendance-table">
                 <thead>
                   <tr className="attendance-th-row">
                     <th className="attendance-th">Date</th>
-                    <th className="attendance-th">Clock In</th>
-                    <th className="attendance-th">Clock Out</th>
+                    <th className="attendance-th">Check In</th>
+                    <th className="attendance-th">Check Out</th>
                     <th className="attendance-th">Total Hours</th>
+                    <th className="attendance-th">Overtime</th>
                     <th className="attendance-th">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {records.map(record => (
+                  {[...records].sort((a, b) => new Date(a.date) - new Date(b.date)).map(record => (
                     <tr key={record._id} className="attendance-tr">
                       <td className="attendance-td-date">{formatDate(record.date)}</td>
                       <td className="attendance-td">{formatTime(record.clockIn)}</td>
                       <td className="attendance-td">{formatTime(record.clockOut)}</td>
-                      <td className="attendance-td-hours">{record.totalHours ? `${record.totalHours}h` : '-'}</td>
+                      <td className="attendance-td-hours">{record.totalHours ? `${record.totalHours} hrs` : '-'}</td>
+                      <td className="attendance-td-hours">{record.overtime ? `${record.overtime}hrs` : '0 hrs'}</td>
                       <td className="attendance-td">
                         {record.clockOut ? (
                           record.totalHours >= 7.5 ? (

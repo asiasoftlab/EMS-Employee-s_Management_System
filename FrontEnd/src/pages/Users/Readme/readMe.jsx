@@ -55,10 +55,10 @@ export default function ReadMe() {
       {/* Sidebar Navigation */}
       <aside className="readme-sidebar">
         <button 
-          onClick={() => navigate('/login')} 
+          onClick={() => navigate('/')} 
           className="readme-back-btn"
         >
-          <ChevronLeft size={16} /> Back to Login
+          <ChevronLeft size={16} /> Back
         </button>
         
         <div>

@@ -3,8 +3,7 @@ import { db } from '../config/db.js';
 import admin from 'firebase-admin';
 
 const getTodayDateString = () => {
-  const date = new Date();
-  return date.toISOString().split('T')[0];
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
 };
 
 // @desc    Get user's attendance records

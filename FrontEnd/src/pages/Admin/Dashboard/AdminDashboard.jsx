@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from '../../../config/axiosConfig';
 import { socket } from '../../../config/socket';
-import { Power, RefreshCw, Briefcase, Filter, ClipboardList, Clock, X, CheckCircle2, Circle, AlertCircle, User, Calendar, Tag, FileText, AlignLeft, Hash, MapPin, MessageSquare, Send, Megaphone, Trash2, Download, FileSpreadsheet } from 'lucide-react';
+import { Power, RefreshCw, Briefcase, Filter, ClipboardList, Clock, X, CheckCircle2, Circle, AlertCircle, User, Calendar, Tag, FileText, AlignLeft, Hash, MapPin, MessageSquare, Send, Megaphone, Trash2, Download, FileSpreadsheet, BookOpen } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
@@ -584,6 +584,14 @@ export default function AdminDashboard({ user }) {
               style={{ display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', padding: '0 12px' }}
             >
               <Megaphone size={16} /> Notices
+            </button>
+            <button
+              className="refresh-btn"
+              onClick={() => navigate('/readme')}
+              title="View Policies"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', width: 'auto', padding: '0 12px' }}
+            >
+              <BookOpen size={16} /> Policy
             </button>
             <div style={{ position: 'relative' }}>
               <button
