@@ -26,7 +26,7 @@ export default function ResetPassword() {
 
   useEffect(() => {
     if (!phone) {
-      toast.error('Session expired. Please try again.');
+      toast.error('Your session has expired. Please log in again.');
       navigate('/forgot-password');
     }
   }, [phone, navigate]);
@@ -35,13 +35,13 @@ export default function ResetPassword() {
     e.preventDefault();
 
     if (!/^\d{6}$/.test(otp)) {
-      return toast.error('OTP must be exactly 6 digits');
+      return toast.error('Please enter the 6-digit OTP we sent you.');
     }
     if (password.length < 6) {
-      return toast.error('Password must be at least 6 characters');
+      return toast.error('Please make sure your password is at least 6 characters long.');
     }
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error('The passwords you entered do not match. Please try again.');
       return;
     }
 
@@ -51,7 +51,7 @@ export default function ResetPassword() {
       toast.success('Password reset successful! You can now login.');
       navigate('/login');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Error resetting password');
+      toast.error(err.response?.data?.message || 'We encountered an issue while resetting your password. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -12,7 +12,7 @@ export default function Leaves({ user }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [editingLeaveId, setEditingLeaveId] = useState(null);
-  
+
   const [formData, setFormData] = useState({
     leaveType: 'Casual',
     startDate: '',
@@ -28,7 +28,7 @@ export default function Leaves({ user }) {
       setLeaves(data || []);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load leave history');
+      toast.error("We couldn't load your leave history. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -63,24 +63,24 @@ export default function Leaves({ user }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.startDate || !formData.endDate || !formData.reason) {
-      toast.error('Please fill all required fields');
+      toast.error('Please fill out all the required fields to proceed.');
       return;
     }
 
     const todayStr = getTodayString();
     if (formData.startDate < todayStr) {
-      toast.error('Start date cannot be in the past');
+      toast.error('The start date must be today or in the future.');
       return;
     }
 
     if (new Date(formData.startDate) > new Date(formData.endDate)) {
-      toast.error('End date cannot be before start date');
+      toast.error('The end date must be after your start date.');
       return;
     }
 
     const reqStart = new Date(formData.startDate);
     const reqEnd = new Date(formData.endDate);
-    
+
     // Check if they only selected Sundays
     let hasWorkingDays = false;
     for (let d = new Date(reqStart); d <= reqEnd; d.setDate(d.getDate() + 1)) {
@@ -89,7 +89,7 @@ export default function Leaves({ user }) {
         break;
       }
     }
-    
+
     if (!hasWorkingDays) {
       toast.error('Nice try! 😅 Sunday is already a holiday, go enjoy your weekend! 🌴', {
         icon: '😂'
@@ -109,7 +109,7 @@ export default function Leaves({ user }) {
     });
 
     if (hasOverlap) {
-      toast.error('You already have a leave applied during these dates');
+      toast.error("It looks like you've already requested a leave during these dates.");
       return;
     }
 
@@ -122,7 +122,7 @@ export default function Leaves({ user }) {
       const todayObj = new Date(todayStr);
       const daysDiff = (startObj - todayObj) / (1000 * 60 * 60 * 24);
       if (daysDiff < 3) {
-        toast.error('Casual leaves must be applied at least 3 days in advance');
+        toast.error('Please request casual leaves at least 3 days in advance.');
         return;
       }
 
@@ -135,7 +135,7 @@ export default function Leaves({ user }) {
       });
 
       if (casualLeavesThisMonth.length >= 1) {
-        toast.error('You are only allowed 1 Casual Leave per month');
+        toast.error("You've already used your casual leave for this month.");
         return;
       }
     }
@@ -161,7 +161,7 @@ export default function Leaves({ user }) {
       fetchLeaves();
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || (editingLeaveId ? 'Failed to update leave' : 'Failed to apply leave'));
+      toast.error(err.response?.data?.message || (editingLeaveId ? "We couldn't update your leave request. Please try again." : "We couldn't submit your leave request. Please try again."));
     } finally {
       setActionLoading(false);
     }
@@ -196,7 +196,7 @@ export default function Leaves({ user }) {
                   fetchLeaves();
                 } catch (err) {
                   console.error(err);
-                  toast.error(err.response?.data?.message || 'Failed to cancel leave');
+                  toast.error(err.response?.data?.message || "We couldn't cancel your leave request. Please try again.");
                 }
               }}
               style={{ padding: '4px 12px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
@@ -238,7 +238,7 @@ export default function Leaves({ user }) {
   // Calculate Leave Stats
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
-  
+
   let totalLeavesThisYear = 0;
   let casualLeavesThisMonth = 0;
   let unpaidLeaves = 0;
@@ -247,7 +247,7 @@ export default function Leaves({ user }) {
     if (leave.status === 'Rejected') return;
     const leaveStart = new Date(leave.startDate);
     const leaveEnd = new Date(leave.endDate);
-    
+
     let days = 0;
     if (leave.leaveType === 'HalfDay') {
       // HalfDay is always single day
@@ -285,15 +285,15 @@ export default function Leaves({ user }) {
             <p className="leaves-header-subtitle">Apply for leaves and track your requests.</p>
           </div>
           <div className="leaves-action-group">
-            <button 
-              onClick={fetchLeaves} 
-              disabled={loading} 
+            <button
+              onClick={fetchLeaves}
+              disabled={loading}
               className="leaves-refresh-btn"
               title="Refresh History"
             >
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
             </button>
-            <button 
+            <button
               onClick={() => {
                 setEditingLeaveId(null);
                 setFormData({
@@ -304,7 +304,7 @@ export default function Leaves({ user }) {
                   halfDayShift: 'FirstHalf'
                 });
                 setModalOpen(true);
-              }} 
+              }}
               className="leaves-apply-btn"
             >
               <Plus size={18} /> Apply Leave
@@ -435,21 +435,21 @@ export default function Leaves({ user }) {
           <div className="leave-modal" onClick={e => e.stopPropagation()}>
             <div className="leave-modal-header">
               <h2 className="leave-modal-title">{editingLeaveId ? 'Edit Leave Request' : 'Apply for Leave'}</h2>
-              <button 
-                className="leave-modal-close" 
+              <button
+                className="leave-modal-close"
                 onClick={() => setModalOpen(false)}
                 disabled={actionLoading}
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="leave-form">
               <div className="leave-form-group">
                 <label className="leave-label">Leave Type</label>
-                <select 
-                  name="leaveType" 
-                  value={formData.leaveType} 
+                <select
+                  name="leaveType"
+                  value={formData.leaveType}
                   onChange={handleChange}
                   className="leave-select"
                   disabled={actionLoading}
@@ -465,9 +465,9 @@ export default function Leaves({ user }) {
               <div className="leave-date-row">
                 <div className="leave-form-group">
                   <label className="leave-label">{formData.leaveType === 'HalfDay' ? 'Date' : 'Start Date'}</label>
-                  <input 
-                    type="date" 
-                    name="startDate" 
+                  <input
+                    type="date"
+                    name="startDate"
                     value={formData.startDate}
                     onChange={handleChange}
                     className="leave-input"
@@ -479,8 +479,8 @@ export default function Leaves({ user }) {
                 {formData.leaveType !== 'HalfDay' && (
                   <div className="leave-form-group">
                     <label className="leave-label">End Date</label>
-                    <input type="date" 
-                      name="endDate" 
+                    <input type="date"
+                      name="endDate"
                       value={formData.endDate}
                       onChange={handleChange}
                       className="leave-input"
@@ -510,8 +510,8 @@ export default function Leaves({ user }) {
 
               <div className="leave-form-group">
                 <label className="leave-label">Reason</label>
-                <textarea 
-                  name="reason" 
+                <textarea
+                  name="reason"
                   value={formData.reason}
                   onChange={handleChange}
                   placeholder="Provide a valid reason for your leave..."
@@ -522,16 +522,16 @@ export default function Leaves({ user }) {
               </div>
 
               <div className="leave-form-actions">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setModalOpen(false)}
                   className="leave-btn-cancel"
                   disabled={actionLoading}
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="leave-btn-submit"
                   disabled={actionLoading}
                 >

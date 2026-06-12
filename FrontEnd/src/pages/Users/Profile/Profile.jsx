@@ -30,7 +30,7 @@ export default function Profile({ user }) {
       window.location.reload();
     } catch (error) {
       console.error(error);
-      toast.error('Failed to update profile');
+      toast.error("We couldn't update your profile right now. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -48,9 +48,9 @@ export default function Profile({ user }) {
             <p className="text-sm text-slate-500 mt-1">Manage your personal information and account settings.</p>
           </div>
           <div className="profile-header-actions">
-            <button 
-              onClick={() => window.location.reload()} 
-              disabled={loading} 
+            <button
+              onClick={() => window.location.reload()}
+              disabled={loading}
               style={{ padding: '0.625rem', borderRadius: '0.75rem', background: 'white', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} color="#475569" />

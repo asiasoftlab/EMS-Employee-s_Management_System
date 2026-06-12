@@ -14,7 +14,7 @@ export default function ForgotPassword() {
 
     const phoneClean = phone.replace(/\D/g, '');
     if (phoneClean.length < 10 || phoneClean.length > 15) {
-      return toast.error('Please enter a valid mobile number (10-15 digits)');
+      return toast.error('Please enter a valid mobile number (10-15 digits).');
     }
 
     setLoading(true);
@@ -23,7 +23,7 @@ export default function ForgotPassword() {
       toast.success('OTP sent to your mobile number!');
       navigate('/reset-password', { state: { phone } });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Error sending OTP');
+      toast.error(err.response?.data?.message || "We couldn't send the OTP right now. Please try again.");
     } finally {
       setLoading(false);
     }

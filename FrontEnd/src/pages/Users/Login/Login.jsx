@@ -23,10 +23,10 @@ export default function Login({ setUser }) {
     e.preventDefault();
 
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      return toast.error('Please enter a valid email address');
+      return toast.error('Please double-check and enter a valid email address.');
     }
     if (!password || password.length < 6) {
-      return toast.error('Password must be at least 6 characters');
+      return toast.error('Please make sure your password is at least 6 characters long.');
     }
 
     setLoading(true);
@@ -38,7 +38,7 @@ export default function Login({ setUser }) {
       toast.success(`Welcome back, ${data.name}!`);
       navigate('/');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed. Please check credentials.');
+      toast.error(err.response?.data?.message || "We couldn't sign you in. Please check your email and password.");
     } finally {
       setLoading(false);
     }

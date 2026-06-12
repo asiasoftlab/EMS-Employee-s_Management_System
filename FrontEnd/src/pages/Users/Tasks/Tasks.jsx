@@ -68,7 +68,7 @@ export default function Tasks({ user }) {
       setLocalTasks(mappedTasks);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to retrieve tasks');
+      toast.error("We couldn't load your tasks. Please refresh and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -115,16 +115,16 @@ export default function Tasks({ user }) {
     if (e) e.preventDefault();
 
     if (!formTitle || !formTitle.trim()) {
-      return toast.error('Task title is required');
+      return toast.error('Please provide a title for your task.');
     }
     if (!formLocation || !formLocation.trim()) {
-      return toast.error('Location is required');
+      return toast.error('Please select a location for the task.');
     }
     if (!formStatus) {
-      return toast.error('Status state is required');
+      return toast.error('Please select a current status for the task.');
     }
     if (!formDueDate) {
-      return toast.error('Due date deadline is required');
+      return toast.error('Please set a due date for your task.');
     }
 
     const tasksOnDate = localTasks.filter(t => t && t.dueDate === formDueDate);
@@ -133,7 +133,7 @@ export default function Tasks({ user }) {
       : tasksOnDate.length >= 9 && selectedTask?.dueDate !== formDueDate;
 
     if (isExceedingLimit) {
-      return toast.error('Maximum limit of 9 tasks per day reached');
+      return toast.error("You've reached the maximum limit of 9 tasks per day.");
     }
 
     const payload = {
@@ -193,7 +193,7 @@ export default function Tasks({ user }) {
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to sync task changes with Firebase server');
+      toast.error(err.response?.data?.message || "We couldn't save your task changes. Please try again.");
     }
   };
 
@@ -238,7 +238,7 @@ export default function Tasks({ user }) {
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to update task status');
+      toast.error("We couldn't update the task status right now. Please try again.");
     }
   };
 
@@ -267,7 +267,7 @@ export default function Tasks({ user }) {
       });
     } catch (err) {
       console.error(err);
-      toast.error('Failed to sync checklist changes');
+      toast.error("We couldn't save your checklist changes. Please try again.");
     }
   };
 
@@ -362,8 +362,8 @@ export default function Tasks({ user }) {
                             if (isToday) handleToggleComplete(task.id);
                           }}
                           className={`flex-shrink-0 w-5 h-5 border rounded-md flex items-center justify-center transition-all mt-0.5 ${!isToday ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${task.completed
-                              ? 'bg-emerald-500 border-emerald-500 text-white'
-                              : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50'
+                            ? 'bg-emerald-500 border-emerald-500 text-white'
+                            : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50'
                             }`}>
                           {task.completed && <Check size={12} strokeWidth={3} />}
                         </div>
@@ -615,10 +615,10 @@ export default function Tasks({ user }) {
                                   setFormSubtasks(formSubtasks.map((s, idx) => idx === i ? { ...s, completed: e.target.checked } : s));
                                 }}
                               />
-                                  <span className="text-slate-400 font-bold">{i + 1}.</span>
-                                  <span className={`truncate text-slate-700 ${sub.completed ? 'line-through text-slate-400' : ''}`}>{sub.text}</span>
-                                </div>
-                                <button type="button" onClick={() => setFormSubtasks(formSubtasks.filter((_, idx) => idx !== i))} className="text-slate-450 hover:text-red-500 transition-colors p-1 cursor-pointer">
+                              <span className="text-slate-400 font-bold">{i + 1}.</span>
+                              <span className={`truncate text-slate-700 ${sub.completed ? 'line-through text-slate-400' : ''}`}>{sub.text}</span>
+                            </div>
+                            <button type="button" onClick={() => setFormSubtasks(formSubtasks.filter((_, idx) => idx !== i))} className="text-slate-450 hover:text-red-500 transition-colors p-1 cursor-pointer">
                               <X size={12} />
                             </button>
                           </div>
@@ -687,8 +687,8 @@ export default function Tasks({ user }) {
                         }
                       }}
                       className={`flex-shrink-0 w-5 h-5 mt-0.5 border rounded-md flex items-center justify-center transition-all ${selectedTask.dueDate !== new Date().toISOString().split('T')[0] ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${selectedTask.completed
-                          ? 'bg-emerald-500 border-emerald-500 text-white'
-                          : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50'
+                        ? 'bg-emerald-500 border-emerald-500 text-white'
+                        : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50'
                         }`}
                     >
                       {selectedTask.completed && <Check size={12} strokeWidth={3} />}
@@ -707,7 +707,7 @@ export default function Tasks({ user }) {
                     <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wide">Status State</span>
                     <span className="font-semibold text-slate-705 flex items-center gap-1.5 mt-0.5">
                       <span className={`w-2 h-2 rounded-full ${selectedTask.status === 'Completed' ? 'bg-emerald-500' :
-                          selectedTask.status === 'In Progress' ? 'bg-blue-500' : 'bg-slate-400'
+                        selectedTask.status === 'In Progress' ? 'bg-blue-500' : 'bg-slate-400'
                         }`}></span>
                       {selectedTask.status}
                     </span>
@@ -738,8 +738,8 @@ export default function Tasks({ user }) {
                                 }
                               }}
                               className={`flex-shrink-0 w-4 h-4 border rounded flex items-center justify-center transition-all ${selectedTask.dueDate !== new Date().toISOString().split('T')[0] ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${sub.completed
-                                  ? 'bg-emerald-500 border-emerald-500 text-white'
-                                  : 'border-slate-300 hover:border-slate-500'
+                                ? 'bg-emerald-500 border-emerald-500 text-white'
+                                : 'border-slate-300 hover:border-slate-500'
                                 }`}
                             >
                               {sub.completed && <Check size={10} strokeWidth={3} />}
@@ -824,7 +824,7 @@ export default function Tasks({ user }) {
                       if (activeModal === 'view') setActiveModal(null);
                     } catch (err) {
                       console.error(err);
-                      toast.error('Failed to delete task from Firebase');
+                      toast.error("We couldn't delete the task. Please try again.");
                     }
                   }}
                   className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all text-xs active:scale-95 shadow-lg shadow-red-500/10 cursor-pointer"

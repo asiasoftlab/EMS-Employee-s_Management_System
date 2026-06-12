@@ -70,7 +70,7 @@ export default function AdminDashboard({ user }) {
 
     if (isOnLeave) return 'On Leave';
     if (!emp.isOnline) return 'Offline';
-    
+
     if (emp.lastActiveAt) {
       const lastActive = new Date(emp.lastActiveAt._seconds ? emp.lastActiveAt._seconds * 1000 : emp.lastActiveAt).getTime();
       if (Date.now() - lastActive > 15 * 60 * 1000) return 'Away';
@@ -108,7 +108,7 @@ export default function AdminDashboard({ user }) {
       getEmployeeStatus(emp)
     ]);
     autoTable(doc, {
-      head: [['Date','Name', 'Email', 'Department', 'Role', 'Status']],
+      head: [['Date', 'Name', 'Email', 'Department', 'Role', 'Status']],
       body: tableData,
       startY: 20
     });
@@ -157,7 +157,7 @@ export default function AdminDashboard({ user }) {
 
   const exportAllDataExcel = () => {
     const workbook = XLSX.utils.book_new();
-    
+
     // Employees Sheet
     const empData = employees.map(emp => ({ Date: formatDate(emp.createdAt), Name: emp.name, Email: emp.email, Department: emp.department, Status: getEmployeeStatus(emp) }));
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(empData), "Employees");
@@ -191,7 +191,7 @@ export default function AdminDashboard({ user }) {
       const res = await axios.get('/api/notices');
       setAdminNotices(res.data || []);
     } catch (err) {
-      toast.error('Failed to load notices');
+      toast.error("We couldn't load the notices. Please try again.");
     } finally {
       setNoticesLoading(false);
     }
@@ -203,7 +203,7 @@ export default function AdminDashboard({ user }) {
       const res = await axios.get('/api/leaves/all');
       setAdminLeaves(res.data || []);
     } catch (err) {
-      toast.error('Failed to load leaves');
+      toast.error("We couldn't load the leave requests. Please try again.");
     } finally {
       setLeavesLoading(false);
     }
@@ -226,7 +226,7 @@ export default function AdminDashboard({ user }) {
       toast.success('Notice published');
       // Broadcast update could be done here if needed
     } catch (err) {
-      toast.error('Failed to create notice');
+      toast.error("We couldn't create the notice. Please try again.");
     }
   };
 
@@ -236,7 +236,7 @@ export default function AdminDashboard({ user }) {
       setAdminNotices(adminNotices.filter(n => n.id !== id));
       toast.success('Notice deleted');
     } catch (err) {
-      toast.error('Failed to delete notice');
+      toast.error("We couldn't delete the notice. Please try again.");
     }
   };
 
@@ -604,7 +604,7 @@ export default function AdminDashboard({ user }) {
               </button>
               {showDownloadMenu && (
                 <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', zIndex: 50, minWidth: '220px', overflow: 'hidden' }}>
-                  <button 
+                  <button
                     onClick={exportEmployeesExcel}
                     style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '13px', color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}
                     onMouseOver={(e) => e.target.style.background = '#f8fafc'}
@@ -612,7 +612,7 @@ export default function AdminDashboard({ user }) {
                   >
                     <FileSpreadsheet size={14} color="#10b981" /> Employees (Excel)
                   </button>
-                  <button 
+                  <button
                     onClick={exportEmployeesPDF}
                     style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '13px', color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}
                     onMouseOver={(e) => e.target.style.background = '#f8fafc'}
@@ -620,7 +620,7 @@ export default function AdminDashboard({ user }) {
                   >
                     <FileText size={14} color="#ef4444" /> Employees (PDF)
                   </button>
-                  <button 
+                  <button
                     onClick={exportTasksExcel}
                     disabled={!selectedEmp}
                     style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: !selectedEmp ? 'not-allowed' : 'pointer', fontSize: '13px', color: !selectedEmp ? '#94a3b8' : '#334155', display: 'flex', alignItems: 'center', gap: '8px', opacity: !selectedEmp ? 0.6 : 1 }}
@@ -629,7 +629,7 @@ export default function AdminDashboard({ user }) {
                   >
                     <FileSpreadsheet size={14} color="#10b981" /> Selected Employee (Excel)
                   </button>
-                  <button 
+                  <button
                     onClick={exportTasksPDF}
                     disabled={!selectedEmp}
                     style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: !selectedEmp ? 'not-allowed' : 'pointer', fontSize: '13px', color: !selectedEmp ? '#94a3b8' : '#334155', display: 'flex', alignItems: 'center', gap: '8px', opacity: !selectedEmp ? 0.6 : 1 }}
@@ -638,7 +638,7 @@ export default function AdminDashboard({ user }) {
                   >
                     <FileText size={14} color="#ef4444" /> Selected Employee (PDF)
                   </button>
-                  <button 
+                  <button
                     onClick={exportAllDataExcel}
                     style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}
                     onMouseOver={(e) => e.target.style.background = '#f8fafc'}

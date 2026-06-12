@@ -14,14 +14,14 @@ export default function NoticeBoard({ user }) {
     try {
       const { data } = await axios.get('/api/notices');
       setNotices(data || []);
-      
+
       // Update last viewed time in localStorage
       if (data && data.length > 0) {
         localStorage.setItem('lastViewedNoticeTime', new Date().toISOString());
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load notices');
+      toast.error("We couldn't load the announcements. Please check back later.");
     } finally {
       setLoading(false);
     }
@@ -60,9 +60,9 @@ export default function NoticeBoard({ user }) {
             <div className="flex flex-col gap-4">
               {[1, 2, 3].map(idx => (
                 <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-premium min-h-[8rem] flex flex-col justify-between animate-pulse">
-                   <div className="h-5 bg-slate-200 rounded w-1/3 mb-2"></div>
-                   <div className="h-4 bg-slate-200 rounded w-full mb-1"></div>
-                   <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+                  <div className="h-5 bg-slate-200 rounded w-1/3 mb-2"></div>
+                  <div className="h-4 bg-slate-200 rounded w-full mb-1"></div>
+                  <div className="h-4 bg-slate-200 rounded w-5/6"></div>
                 </div>
               ))}
             </div>
@@ -81,14 +81,14 @@ export default function NoticeBoard({ user }) {
                         </h3>
                         {/* Show "New" tag if created in the last 3 days */}
                         {notice.createdAt && (new Date() - (notice.createdAt._seconds ? new Date(notice.createdAt._seconds * 1000) : new Date(notice.createdAt))) < 3 * 24 * 60 * 60 * 1000 && (
-                           <span className="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200 uppercase">New</span>
+                          <span className="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200 uppercase">New</span>
                         )}
                       </div>
-                      
+
                       <p className="text-slate-600 text-sm whitespace-pre-line leading-relaxed mb-4">
                         {notice.content}
                       </p>
-                      
+
                       <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-semibold text-slate-400 pt-3 border-t border-slate-50">
                         <span className="flex items-center gap-1.5">
                           <Calendar size={13} />

@@ -32,20 +32,20 @@ export default function Register({ setUser }) {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      return toast.error('Full name is required');
+      return toast.error('Please provide your full name.');
     }
     if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      return toast.error('Please enter a valid email address');
+      return toast.error('Please double-check and enter a valid email address.');
     }
     if (!formData.email.toLowerCase().endsWith('@asiasoftlab.in')) {
-      return toast.error('Please check your email address');
+      return toast.error('Please make sure the email addresses match.');
     }
     const phoneClean = formData.phone.replace(/\D/g, '');
     if (phoneClean.length < 10 || phoneClean.length > 15) {
-      return toast.error('Please enter a valid mobile number (10-15 digits)');
+      return toast.error('Please enter a valid mobile number (10-15 digits).');
     }
     if (formData.password.length < 6) {
-      return toast.error('Password must be at least 6 characters');
+      return toast.error('Please make sure your password is at least 6 characters long.');
     }
 
     setLoading(true);
@@ -55,7 +55,7 @@ export default function Register({ setUser }) {
       toast.success('Registration successful! Please sign in with your new credentials.');
       navigate('/login');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed.');
+      toast.error(err.response?.data?.message || 'We encountered an issue during registration. Please try again.');
     } finally {
       setLoading(false);
     }

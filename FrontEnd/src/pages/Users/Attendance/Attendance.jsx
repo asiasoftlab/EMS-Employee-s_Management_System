@@ -23,7 +23,7 @@ export default function Attendance({ user }) {
       setTodayRecord(foundToday || null);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load attendance records');
+      toast.error("We couldn't load your attendance records. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ export default function Attendance({ user }) {
       fetchAttendance();
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Failed to checked-in');
+      toast.error(err.response?.data?.message || "We couldn't clock you in. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -57,7 +57,7 @@ export default function Attendance({ user }) {
       fetchAttendance();
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Failed to clock out');
+      toast.error(err.response?.data?.message || "We couldn't clock you out. Please try again.");
     } finally {
       setActionLoading(false);
     }

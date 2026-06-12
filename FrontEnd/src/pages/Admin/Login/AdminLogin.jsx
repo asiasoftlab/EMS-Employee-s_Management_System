@@ -23,7 +23,7 @@ export default function AdminLogin({ setUser }) {
     e.preventDefault();
 
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      return toast.error('Please enter a valid admin email');
+      return toast.error('Please double-check and enter a valid admin email.');
     }
 
     setLoading(true);
@@ -32,7 +32,7 @@ export default function AdminLogin({ setUser }) {
       const { data } = await axios.post('/api/auth/login', { email, password });
 
       if (data.role !== 'admin' && data.role !== 'manager') {
-        toast.error('Access Denied: Admin privileges required.');
+        toast.error("Access Denied: You need admin privileges to sign in here.");
         setLoading(false);
         return;
       }
@@ -42,7 +42,7 @@ export default function AdminLogin({ setUser }) {
       toast.success(`Admin Session Started: Welcome ${data.name}`);
       navigate('/admin');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Admin authentication failed.');
+      toast.error(err.response?.data?.message || "We couldn't authenticate your admin account. Please try again.");
     } finally {
       setLoading(false);
     }

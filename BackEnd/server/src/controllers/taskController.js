@@ -44,7 +44,7 @@ export const createTask = asyncHandler(async (req, res) => {
     status: 'Pending',
     priority: priority || 'Medium',
     deadline: new Date(deadline),
-    submittedTo: ['manager', 'admin'],
+    submittedTo: ['manager'],
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   };

@@ -25,8 +25,8 @@ export default function AdminLeaves({ user }) {
     try {
       const res = await axios.get('/api/leaves/all');
       setAdminLeaves(res.data || []);
-    } catch(err) {
-      toast.error('Failed to load leaves');
+    } catch (err) {
+      toast.error("We couldn't load the leave requests. Please try again.");
     } finally {
       setLeavesLoading(false);
     }
@@ -44,13 +44,13 @@ export default function AdminLeaves({ user }) {
       await axios.patch(`/api/leaves/${id}/status`, payload);
       toast.success(`Leave ${status.toLowerCase()} successfully`);
       fetchLeavesAdmin();
-      
+
       // Close modal if open
       setShowRejectModal(false);
       setLeaveToReject(null);
       setRejectReason('');
-    } catch(err) {
-      toast.error('Failed to update leave status');
+    } catch (err) {
+      toast.error("We couldn't update the leave status. Please try again.");
     }
   };
 
@@ -60,7 +60,7 @@ export default function AdminLeaves({ user }) {
   };
   const totalDays = (startDate, endDate) => {
     if (!startDate || !endDate) return 0;
-    
+
     const parseDate = (ts) => {
       const secs = ts._seconds ?? ts.seconds;
       if (secs !== undefined) return new Date(secs * 1000);
@@ -69,7 +69,7 @@ export default function AdminLeaves({ user }) {
 
     const start = parseDate(startDate);
     const end = parseDate(endDate);
-    
+
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays + 1; // +1 to make it inclusive
@@ -92,8 +92,8 @@ export default function AdminLeaves({ user }) {
           <ArrowLeft size={16} /> Back to Dashboard
         </Link>
         <h1 style={{ fontSize: '20px', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>Employee's Leave</h1>
-        <button 
-          onClick={fetchLeavesAdmin} 
+        <button
+          onClick={fetchLeavesAdmin}
           disabled={leavesLoading}
           style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#475569', fontSize: '13px', fontWeight: '500' }}
         >
@@ -139,29 +139,29 @@ export default function AdminLeaves({ user }) {
                       <strong>Half Day:</strong> {leave.halfDayShift}
                     </div>
                   )}
-                  
+
                 </div>
 
                 <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
                   <p style={{ fontSize: '13px', color: '#334155', margin: 0 }}><strong>Reason:</strong> {leave.reason}</p>
                 </div>
-                
+
                 {leave.status === 'Rejected' && leave.rejectReason && (
-                   <div style={{ background: '#fef2f2', padding: '12px', borderRadius: '8px', border: '1px solid #fca5a5', marginBottom: '16px' }}>
-                     <p style={{ fontSize: '13px', color: '#b91c1c', margin: 0 }}><strong>Rejection Reason:</strong> {leave.rejectReason}</p>
-                   </div>
+                  <div style={{ background: '#fef2f2', padding: '12px', borderRadius: '8px', border: '1px solid #fca5a5', marginBottom: '16px' }}>
+                    <p style={{ fontSize: '13px', color: '#b91c1c', margin: 0 }}><strong>Rejection Reason:</strong> {leave.rejectReason}</p>
+                  </div>
                 )}
 
 
                 {leave.status === 'Pending' && (
                   <div className="leave-card-actions">
-                    <button 
+                    <button
                       onClick={() => handleUpdateLeaveStatus(leave._id, 'Approved')}
                       style={{ background: '#10b981', color: 'white', padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', transition: 'background 0.2s' }}
                     >
                       <CheckCircle2 size={16} /> Approve
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleRejectClick(leave._id)}
                       style={{ background: '#ef4444', color: 'white', padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', transition: 'background 0.2s' }}
                     >
@@ -181,22 +181,22 @@ export default function AdminLeaves({ user }) {
           <div className="reject-modal-content">
             <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#0f172a', marginTop: 0, marginBottom: '16px' }}>Reject Leave Request</h3>
             <p style={{ fontSize: '13px', color: '#475569', marginBottom: '16px' }}>Please provide a reason for rejecting this leave request. This will be visible to the employee.</p>
-            
+
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Enter rejection reason here..."
               style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', minHeight: '100px', marginBottom: '20px', fontSize: '13px', outline: 'none', resize: 'vertical' }}
             />
-            
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <button 
+              <button
                 onClick={() => { setShowRejectModal(false); setLeaveToReject(null); setRejectReason(''); }}
                 style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#475569', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={submitReject}
                 style={{ padding: '8px 16px', background: '#ef4444', border: 'none', borderRadius: '6px', color: 'white', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
               >
