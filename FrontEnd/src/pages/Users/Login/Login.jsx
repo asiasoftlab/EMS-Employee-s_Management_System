@@ -33,6 +33,13 @@ export default function Login({ setUser }) {
 
     try {
       const { data } = await axios.post('/api/auth/login', { email, password });
+
+      if (data.role !== 'employee') {
+        toast.error("Access Denied: Admins must use the Admin Portal to sign in.");
+        setLoading(false);
+        return;
+      }
+
       if (data.token) localStorage.setItem('token', data.token);
       setUser(data);
       toast.success(`Welcome back, ${data.name}!`);

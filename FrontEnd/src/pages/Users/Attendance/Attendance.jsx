@@ -11,7 +11,21 @@ export default function Attendance({ user }) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [todayRecord, setTodayRecord] = useState(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getLiveDuration = (clockIn) => {
+    if (!clockIn) return '0h 0m 0s';
+    const diffMs = Math.max(0, currentTime - new Date(clockIn));
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+    return `${hours}h ${minutes}m ${seconds}s`;
+  };
   const fetchAttendance = async () => {
     setLoading(true);
     try {
@@ -79,10 +93,8 @@ export default function Attendance({ user }) {
   const isClockedOut = todayRecord?.clockOut != null;
 
   const totalOvertime = records.reduce((acc, curr) => {
-    if (curr.totalHours && curr.totalHours > 7.5) {
-      return acc + (curr.totalHours - 7.5);
-    }
-    return acc;
+    const overtime = parseFloat(curr.overtime) || (curr.totalHours && curr.totalHours > 7.5 ? curr.totalHours - 7.5 : 0);
+    return acc + overtime;
   }, 0).toFixed(1);
 
   return (
@@ -124,6 +136,9 @@ export default function Attendance({ user }) {
             {isClockedIn && !isClockedOut && (
               <>
                 <p className="attendance-action-text">You clocked in at <strong>{formatTime(todayRecord.clockIn)}</strong>.</p>
+                <p className="attendance-action-text" style={{ marginTop: '0.5rem' }}>
+                  Live Hours : <strong>{getLiveDuration(todayRecord.clockIn)}</strong>
+                </p>
                 <button
                   onClick={handleClockOut}
                   disabled={actionLoading}
@@ -203,32 +218,41 @@ export default function Attendance({ user }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...records].sort((a, b) => new Date(a.date) - new Date(b.date)).map(record => (
-                    <tr key={record._id} className="attendance-tr">
-                      <td className="attendance-td-date">{formatDate(record.date)}</td>
-                      <td className="attendance-td">{formatTime(record.clockIn)}</td>
-                      <td className="attendance-td">{formatTime(record.clockOut)}</td>
-                      <td className="attendance-td-hours">{record.totalHours ? `${record.totalHours} hrs` : '-'}</td>
-                      <td className="attendance-td-hours">{record.overtime ? `${record.overtime}hrs` : '0 hrs'}</td>
-                      <td className="attendance-td">
-                        {record.clockOut ? (
-                          record.totalHours >= 7.5 ? (
-                            <span className="attendance-status-badge" style={{ background: 'white', color: '#166534' }}>
-                              Full Day
-                            </span>
+                  {[...records].sort((a, b) => new Date(b.date) - new Date(a.date)).map(record => {
+                    const rowOvertime = parseFloat(record.overtime) || (record.totalHours && record.totalHours > 7.5 ? record.totalHours - 7.5 : 0);
+                    return (
+                      <tr key={record._id} className="attendance-tr">
+                        <td className="attendance-td-date">{formatDate(record.date)}</td>
+                        <td className="attendance-td">{formatTime(record.clockIn)}</td>
+                        <td className="attendance-td">{formatTime(record.clockOut)}</td>
+                        <td className="attendance-td-hours">
+                          {record.totalHours
+                            ? `${record.totalHours} hrs`
+                            : (record.clockIn && !record.clockOut
+                              ? <span>{getLiveDuration(record.clockIn)}</span>
+                              : '-')}
+                        </td>
+                        <td className="attendance-td-hours">{rowOvertime > 0 ? `${rowOvertime.toFixed(1)} hrs` : '0 hrs'}</td>
+                        <td className="attendance-td">
+                          {record.clockOut ? (
+                            record.totalHours >= 7.5 ? (
+                              <span className="attendance-status-badge" style={{ background: 'white', color: '#166534' }}>
+                                Full Day
+                              </span>
+                            ) : (
+                              <span className="attendance-status-badge" style={{ background: 'white', color: '#991b1b' }}>
+                                Incomplete ({record.totalHours} ‹ 7.5h)
+                              </span>
+                            )
                           ) : (
-                            <span className="attendance-status-badge" style={{ background: 'white', color: '#991b1b' }}>
-                              Incomplete ({record.totalHours} ‹ 7.5h)
+                            <span className="attendance-status-badge" style={{ background: 'white', color: '#3730a3' }}>
+                              In Progress
                             </span>
-                          )
-                        ) : (
-                          <span className="attendance-status-badge" style={{ background: 'white', color: '#3730a3' }}>
-                            In Progress
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -324,24 +324,25 @@
     justify-content: space-between;
     gap: 1rem;
   }
-  
-  .attendance-header > div {
+
+  .attendance-header>div {
     flex: 1;
     min-width: 200px;
   }
-  
+
   .attendance-refresh-btn {
     align-self: flex-start;
     padding: 0.5rem;
     border-radius: 0.5rem;
   }
-  
+
   .attendance-history-section {
     overflow-x: auto;
   }
-  
+
   .attendance-table {
-    min-width: 600px; /* Forces table to scroll instead of breaking layout */
+    min-width: 600px;
+    /* Forces table to scroll instead of breaking layout */
   }
 }
 
@@ -349,11 +350,11 @@
   .attendance-stats-row {
     grid-template-columns: 1fr;
   }
-  
+
   .attendance-action-card {
     padding: 1.5rem 1rem;
   }
-  
+
   .attendance-weekly-card {
     padding: 1.5rem 1rem;
   }

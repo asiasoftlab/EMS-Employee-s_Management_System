@@ -127,6 +127,7 @@ export const getMe = asyncHandler(async (req, res) => {
     role: req.user.role || 'employee',
     department: req.user.department,
     phone: req.user.phone,
+    emergencyContact: req.user.emergencyContact,
     gender: req.user.gender,
     dob: req.user.dob,
     address: req.user.address,
@@ -148,11 +149,12 @@ export const updateProfile = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 
-  const { name, phone, gender, dob, address, bloodGroup } = req.body;
+  const { name, phone, emergencyContact, gender, dob, address, bloodGroup } = req.body;
   
   await userRef.update({
     name: name || docSnap.data().name || '',
     phone: phone || docSnap.data().phone || '',
+    emergencyContact: emergencyContact || docSnap.data().emergencyContact || '',
     gender: gender || docSnap.data().gender || '',
     dob: dob || docSnap.data().dob || '',
     address: address || docSnap.data().address || '',
@@ -167,6 +169,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
     role: updatedDoc.data().role || 'employee',
     department: updatedDoc.data().department,
     phone: updatedDoc.data().phone,
+    emergencyContact: updatedDoc.data().emergencyContact,
     gender: updatedDoc.data().gender,
     dob: updatedDoc.data().dob,
     address: updatedDoc.data().address,

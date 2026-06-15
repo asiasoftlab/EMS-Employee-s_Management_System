@@ -3,8 +3,7 @@
   grid-template-columns: 260px 1fr 320px;
   gap: 1.5rem;
   padding: 1.5rem;
-  height: calc(100vh - 70px);
-  overflow: hidden;
+  min-height: calc(100vh - 70px);
 }
 
 .sidebar {
@@ -17,6 +16,11 @@
   flex-direction: column;
   gap: 2rem;
   box-shadow: var(--glass-shadow);
+  position: sticky;
+  top: 1.5rem;
+  height: max-content;
+  max-height: calc(100vh - 3rem - 70px);
+  overflow-y: auto;
 }
 
 .sidebar-nav {
@@ -49,7 +53,6 @@
 }
 
 .main-dashboard {
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   padding-right: 0.5rem;
@@ -58,7 +61,7 @@
   width: 6px;
 }
 .main-dashboard::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
 }
 .notification-panel {
@@ -121,8 +124,10 @@
     position: fixed;
     bottom: 0;
     left: 0;
+    top: auto;
     width: 100%;
     height: 70px;
+    max-height: none;
     padding: 0 10px;
     z-index: 1000;
     border-radius: 0;

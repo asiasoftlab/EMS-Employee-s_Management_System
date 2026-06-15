@@ -12,6 +12,7 @@ export default function Profile({ user }) {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
+    emergencyContact: user?.emergencyContact || '',
     gender: user?.gender || '',
     dob: user?.dob || '',
     address: user?.address || '',
@@ -122,6 +123,20 @@ export default function Profile({ user }) {
                 />
               ) : (
                 <div className="profile-field-value">{user?.phone || 'Not Assigned'}</div>
+              )}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Emergency Contact</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.emergencyContact}
+                  onChange={e => setFormData({ ...formData, emergencyContact: e.target.value })}
+                  className="profile-input"
+                  placeholder="Enter emergency number"
+                />
+              ) : (
+                <div className="profile-field-value">{user?.emergencyContact || 'Not Assigned'}</div>
               )}
             </div>
             <div className="flex flex-col gap-1.5">

@@ -28,6 +28,7 @@ export default function Tasks({ user }) {
   const [formStatus, setFormStatus] = useState('Pending');
   const [formTitle, setFormTitle] = useState('');
   const [formLocation, setFormLocation] = useState('');
+  const [customLocation, setCustomLocation] = useState('');
   const [formDueDate, setFormDueDate] = useState('');
   const [formNotes, setFormNotes] = useState('');
   const [formSubtasks, setFormSubtasks] = useState([]);
@@ -86,6 +87,7 @@ export default function Tasks({ user }) {
     setFormStatus('Pending');
     setFormTitle('');
     setFormLocation('');
+    setCustomLocation('');
     setFormDueDate(new Date().toISOString().split('T')[0]);
     setFormNotes('');
     setFormSubtasks([]);
@@ -98,7 +100,14 @@ export default function Tasks({ user }) {
     setSelectedTask(task);
     setFormStatus(task.status);
     setFormTitle(task.title || '');
-    setFormLocation(task.location || '');
+    const predefinedLocations = ['Thiruvananthapuram', 'Chirayinkeezhu', 'Kottayam', 'Work from home'];
+    if (task.location && !predefinedLocations.includes(task.location)) {
+      setFormLocation('Others');
+      setCustomLocation(task.location);
+    } else {
+      setFormLocation(task.location || '');
+      setCustomLocation('');
+    }
     setFormDueDate(task.dueDate || '');
     setFormNotes(task.notes || '');
     setFormSubtasks(task.subtasks || []);
@@ -117,8 +126,9 @@ export default function Tasks({ user }) {
     if (!formTitle || !formTitle.trim()) {
       return toast.error('Please provide a title for your task.');
     }
-    if (!formLocation || !formLocation.trim()) {
-      return toast.error('Please select a location for the task.');
+    const finalLocation = formLocation === 'Others' ? customLocation.trim() : formLocation.trim();
+    if (!finalLocation) {
+      return toast.error('Please select or enter a location for the task.');
     }
     if (!formStatus) {
       return toast.error('Please select a current status for the task.');
@@ -138,7 +148,7 @@ export default function Tasks({ user }) {
 
     const payload = {
       title: formTitle.trim() || formatTaskTitle(formDueDate),
-      location: formLocation.trim(),
+      location: finalLocation,
       description: formNotes.trim() || 'Daily Checklist',
       deadline: formDueDate,
       status: formStatus,
@@ -536,6 +546,7 @@ export default function Tasks({ user }) {
                         type="date"
                         className="px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-800 focus:border-slate-400 cursor-pointer text-xs bg-white font-semibold"
                         value={formDueDate}
+                        min={new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date())}
                         onChange={(e) => setFormDueDate(e.target.value)}
                         autoFocus
                       />
@@ -568,6 +579,15 @@ export default function Tasks({ user }) {
                         <option value="Work from home">Work from home</option>
                         <option value="Others">Others</option>
                       </select>
+                      {formLocation === 'Others' && (
+                        <input
+                          type="text"
+                          placeholder="Type custom location..."
+                          className="mt-1.5 px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-800 focus:border-slate-400 bg-white text-xs font-semibold w-full transition-all"
+                          value={customLocation}
+                          onChange={(e) => setCustomLocation(e.target.value)}
+                        />
+                      )}
                     </div>
                   </div>
 
