@@ -17,8 +17,10 @@ export default function Navbar({ user, setUser }) {
   };
   return (
     <nav className="navbar">
-      <Link to="/" className="nav-brand">EMS</Link>
-      <div className="nav-links">
+      <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+        <img src="/EMPLOYEE.png" alt="EMS Logo" style={{ height: '120px',objectFit: 'contain', transform: 'scale(1.4)', transformOrigin: 'left center' }} />
+      </Link>
+     <div className="nav-links">
         {user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>

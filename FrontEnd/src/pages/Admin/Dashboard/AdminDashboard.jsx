@@ -23,6 +23,43 @@ const formatTs = (ms) => {
   return new Date(ms).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
+const LiveWorkingHours = ({ todayHours = 0, totalHours = 0, currentClockIn, className }) => {
+  const [liveToday, setLiveToday] = useState(todayHours);
+  const [liveTotal, setLiveTotal] = useState(totalHours);
+
+  useEffect(() => {
+    if (!currentClockIn) {
+      setLiveToday(todayHours);
+      setLiveTotal(totalHours);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const clockInMs = new Date(currentClockIn).getTime();
+      const diffHrs = (Date.now() - clockInMs) / (1000 * 60 * 60);
+      setLiveToday(todayHours + diffHrs);
+      setLiveTotal(totalHours + diffHrs);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [todayHours, totalHours, currentClockIn]);
+
+  const formatHours = (hrs, showSeconds = false) => {
+    if (!showSeconds) return `${hrs.toFixed(2)}h`;
+    const h = Math.floor(hrs);
+    const m = Math.floor((hrs - h) * 60);
+    const s = Math.floor((hrs - h - m / 60) * 3600);
+    return `${h}h ${m}m ${s}s`;
+  };
+
+  return (
+    <span className={`flex items-center gap-1 ${className || ''}`} title={`Total: ${liveTotal.toFixed(2)}h`}>
+      <Clock size={11} className={currentClockIn ? "text-green-500 animate-pulse" : ""} />
+      {formatHours(liveToday, !!currentClockIn)}
+    </span>
+  );
+};
+
 export default function AdminDashboard({ user }) {
   const navigate = useNavigate();
 
@@ -528,9 +565,12 @@ export default function AdminDashboard({ user }) {
                       </div>
                       <div className="emp-card-info">
                         <span className="emp-card-name">{emp.name}</span>
-                        <span className="emp-card-dept">
-                          <Briefcase size={11} className="inline-icon" />
-                          {emp.department || 'General'}
+                        <span className="emp-card-dept flex items-center gap-2 flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <Briefcase size={11} className="inline-icon" />
+                            {emp.department || 'General'}
+                          </span>
+                          <LiveWorkingHours todayHours={emp.todayWorkingHours} totalHours={emp.totalWorkingHours} currentClockIn={emp.currentClockIn} className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200 shadow-sm" />
                         </span>
                       </div>
 
@@ -683,7 +723,9 @@ export default function AdminDashboard({ user }) {
                 </div>
                 <div>
                   <h2>{selectedEmp.name}</h2>
-                  <p className="tasks-header-sub">{selectedEmp.email} · {selectedEmp.department || 'General'}</p>
+                  <div className="tasks-header-sub flex items-center gap-2 flex-wrap">
+                    <span>{selectedEmp.email} · {selectedEmp.department || 'General'}</span>
+                  </div>
                 </div>
                 <span className="tasks-count-badge">{empTasksLoading ? '…' : empTasks.length} tasks</span>
               </div>
@@ -718,11 +760,12 @@ export default function AdminDashboard({ user }) {
                       <th>Description</th>
                       <th>Location</th>
                       <th>Status</th>
+                      <th>Total Working Hrs</th>
                       <th>Deadline</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {empTasks.map(task => {
+                    {empTasks.map((task, index) => {
                       // title fallback: if stored title is a plain date string, show description instead
                       const displayTitle = task.title && !/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)/.test(task.title)
                         ? task.title
@@ -744,6 +787,18 @@ export default function AdminDashboard({ user }) {
                               {task.status}
                             </span>
                           </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <LiveWorkingHours
+                                todayHours={task.todayWorkingHours || 0}
+                                totalHours={0}
+                                currentClockIn={task.currentClockIn}
+                                className="task-working-hours-badge"
+                              />
+                              {index === 0 && <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>Today</span>}
+                            </div>
+                          </td>
+
                           <td className="task-date-cell">
                             <Clock size={12} className="inline-icon" />
                             {formatDate(task.deadline)}
@@ -785,9 +840,6 @@ export default function AdminDashboard({ user }) {
             <div className="task-modal-badges">
               <span className={`task-status-badge ${statusClass[selectedTask.status] || 'status-pending'}`}>
                 {selectedTask.status}
-              </span>
-              <span className={`task-priority-badge ${priorityClass[selectedTask.priority] || 'priority-medium'}`}>
-                {selectedTask.priority || 'Medium'} Priority
               </span>
             </div>
 

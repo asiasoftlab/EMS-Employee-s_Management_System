@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import axios from '../../config/axiosConfig';
 import { socket } from '../../config/socket';
+import { toast } from 'react-toastify';
 
-export const Sidebar = () => {
+export const Sidebar = ({ user }) => {
   const [unreadNotices, setUnreadNotices] = useState(0);
+  const [showGreetingModal, setShowGreetingModal] = useState(false);
 
   useEffect(() => {
     const fetchNotices = async () => {
@@ -28,7 +30,44 @@ export const Sidebar = () => {
     fetchNotices();
   }, []);
 
+  useEffect(() => {
+    let attendanceInterval;
+    const checkShiftCompletion = async () => {
+      try {
+        const { data } = await axios.get('/api/attendance');
+        const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+        const foundToday = data.find(r => r.date === today);
+        
+        if (foundToday && foundToday.clockIn && !foundToday.clockOut) {
+          const targetDurationMs = 7.5 * 60 * 60 * 1000;
+          
+          const evaluateTime = () => {
+            const diffMs = new Date() - new Date(foundToday.clockIn);
+            if (diffMs >= targetDurationMs) {
+              const todayStr = new Date().toDateString();
+              const hasGreeted = localStorage.getItem('shiftCompletedGreeting');
+              if (hasGreeted !== todayStr) {
+                setShowGreetingModal(true);
+                localStorage.setItem('shiftCompletedGreeting', todayStr);
+              }
+            }
+          };
+
+          evaluateTime();
+          attendanceInterval = setInterval(evaluateTime, 60000);
+        }
+      } catch (err) {}
+    };
+    
+    checkShiftCompletion();
+    
+    return () => {
+      if (attendanceInterval) clearInterval(attendanceInterval);
+    };
+  }, []);
+
   return (
+    <>
     <aside className="sidebar">
       <nav className="sidebar-nav">
         <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end>
@@ -81,6 +120,26 @@ export const Sidebar = () => {
         </div>
       </nav>
     </aside>
+    {showGreetingModal && (
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
+        <div style={{ backgroundColor: '#fff', padding: '2.5rem 2rem', borderRadius: '24px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem', animation: 'bounce 2s infinite' }}>🎉</div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0f172a', marginBottom: '0.75rem' }}>Congratulations!</h2>
+          <p style={{ color: '#475569', fontSize: '1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
+            You've officially completed your <strong>8:00 hrs</strong> shift today. Great job <strong>{user?.name}</strong> and thank you for your hard work! 
+          </p>
+          <button 
+            onClick={() => setShowGreetingModal(false)}
+            style={{ width: '100%', backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '0.85rem', borderRadius: '12px', fontSize: '1rem', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
+            onMouseOver={(e) => { e.target.style.backgroundColor = '#1d4ed8'; e.target.style.transform = 'scale(1.02)'; }}
+            onMouseOut={(e) => { e.target.style.backgroundColor = '#2563eb'; e.target.style.transform = 'scale(1)'; }}
+          >
+            Awesome!
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 
@@ -154,39 +213,58 @@ export const ChatPanel = ({ user }) => {
     return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const getChatDateLabel = (ts) => {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (d.toDateString() === today.toDateString()) return 'Today';
+    if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const groupedMessages = [];
+  let lastDate = null;
+  messages.forEach((msg) => {
+    const msgDate = getChatDateLabel(msg.createdAt);
+    if (msgDate !== lastDate) {
+      groupedMessages.push({ type: 'date', label: msgDate });
+      lastDate = msgDate;
+    }
+    groupedMessages.push({ type: 'msg', data: msg });
+  });
+
   return (
-    <aside className="notification-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-      <div className="panel-title" style={{ flexShrink: 0, paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+    <aside className="notification-panel" style={{ display: 'flex', flexDirection: 'column', padding: 0, gap: 0, overflow: 'hidden' }}>
+      <div className="panel-title" style={{ flexShrink: 0, padding: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)', background: '#fff', margin: 0 }}>
         Live Chat
         <span style={{ fontSize: '0.75rem', background: 'var(--primary)', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>
           Admin
         </span>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        {messages.length === 0 ? (
-          <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '2rem' }}>
+      <div className="user-chat-messages">
+        {groupedMessages.length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#54656f', fontSize: '0.85rem', marginTop: '2rem' }}>
             No messages yet. Say hi!
           </div>
         ) : (
-          messages.map((msg) => {
+          groupedMessages.map((item, idx) => {
+            if (item.type === 'date') {
+              return (
+                <div key={`dl-${idx}`} className="chat-date-separator">
+                  <span>{item.label}</span>
+                </div>
+              );
+            }
+            const msg = item.data;
             const isSelf = msg.senderId === user?._id;
             return (
-              <div key={msg.id} style={{ display: 'flex', justifyContent: isSelf ? 'flex-end' : 'flex-start' }}>
-                <div style={{
-                  maxWidth: '85%',
-                  padding: '0.55rem 0.75rem',
-                  borderRadius: '12px',
-                  backgroundColor: isSelf ? 'var(--primary)' : 'white',
-                  color: isSelf ? 'white' : 'var(--text-primary)',
-                  boxShadow: isSelf ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-                  border: isSelf ? 'none' : '1px solid var(--border-color)',
-                  borderBottomRightRadius: isSelf ? '4px' : '12px',
-                  borderBottomLeftRadius: isSelf ? '12px' : '4px',
-                }}>
-                  <p style={{ margin: 0, fontSize: '0.85rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.4 }}>{msg.text}</p>
-                  <span style={{ display: 'block', fontSize: '0.65rem', textAlign: 'right', marginTop: '4px', opacity: 0.7 }}>
-                    {formatTime(msg.createdAt)}
-                  </span>
+              <div key={msg.id} className={`chat-bubble-row ${isSelf ? 'self' : 'other'}`}>
+                <div className={`chat-bubble ${isSelf ? 'self' : 'other'}`}>
+                  <p className="chat-bubble-text">{msg.text}</p>
+                  <span className="chat-bubble-time">{formatTime(msg.createdAt)}</span>
                 </div>
               </div>
             );
@@ -194,35 +272,22 @@ export const ChatPanel = ({ user }) => {
         )}
         <div ref={bottomRef} />
       </div>
-      <form onSubmit={handleSend} style={{ flexShrink: 0, paddingTop: '1rem', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '0.5rem' }}>
+      <form onSubmit={handleSend} className="chat-input-container">
         <input
           ref={inputRef}
           type="text"
+          className="chat-input-field"
           placeholder="Type a message..."
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           disabled={sending}
-          style={{
-            flex: 1,
-            padding: '0.6rem 1rem',
-            borderRadius: '20px',
-            border: '1px solid var(--border-color)',
-            outline: 'none',
-            fontSize: '0.85rem',
-            background: 'var(--bg-color)'
-          }}
         />
         <button
           type="submit"
+          className="chat-send-btn"
           disabled={!inputText.trim() || sending}
-          style={{
-            width: '36px', height: '36px', borderRadius: '50%', border: 'none',
-            background: inputText.trim() ? '#10b981' : 'var(--border-color)',
-            color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: inputText.trim() ? 'pointer' : 'not-allowed',
-            transition: 'all 0.2s'
-          }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         </button>
       </form>
     </aside>

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit3, Trash2, Eye, Calendar, Check, X, Inbox, FolderLock, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axios from '../../../config/axiosConfig';
+import Pagination from '../../../components/Pagination/pagination';
 import './Tasks.css';
 
 export default function Tasks({ user }) {
@@ -33,6 +34,7 @@ export default function Tasks({ user }) {
   const [formNotes, setFormNotes] = useState('');
   const [formSubtasks, setFormSubtasks] = useState([]);
   const [newSubtaskText, setNewSubtaskText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchTasks = async () => {
     setIsLoading(true);
@@ -100,7 +102,7 @@ export default function Tasks({ user }) {
     setSelectedTask(task);
     setFormStatus(task.status);
     setFormTitle(task.title || '');
-    const predefinedLocations = ['Thiruvananthapuram', 'Chirayinkeezhu', 'Kottayam', 'Work from home'];
+    const predefinedLocations = ['Thiruvananthapuram','Chennai', 'Chirayinkeezhu', 'Kottayam', 'Work from home'];
     if (task.location && !predefinedLocations.includes(task.location)) {
       setFormLocation('Others');
       setCustomLocation(task.location);
@@ -282,7 +284,10 @@ export default function Tasks({ user }) {
   };
 
 
-  const filteredTasks = (localTasks || []).filter(Boolean);
+  const allTasks = (localTasks || []).filter(Boolean);
+  const tasksPerPage = 12;
+  const totalPages = Math.ceil(allTasks.length / tasksPerPage) || 1;
+  const currentTasks = allTasks.slice((currentPage - 1) * tasksPerPage, currentPage * tasksPerPage);
   const listVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -300,7 +305,7 @@ export default function Tasks({ user }) {
 
   return (
     <div className="dashboard-container">
-      <Sidebar />
+      <Sidebar user={user} />
       <main className="main-dashboard overflow-y-auto relative bg-slate-50/50">
         <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
@@ -336,142 +341,150 @@ export default function Tasks({ user }) {
                 </div>
               ))}
             </div>
-          ) : filteredTasks.length > 0 ? (
-            <motion.div variants={listVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
-              <AnimatePresence mode="popLayout">
-                {filteredTasks.map(task => {
-                  const statusStyles = {
-                    Pending: 'bg-slate-50 text-slate-500 border-slate-200',
-                    'In Progress': 'bg-blue-50 text-blue-500 border-blue-200',
-                    Completed: 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                  };
-                  const isToday = task.dueDate === new Date().toISOString().split('T')[0];
+          ) : currentTasks.length > 0 ? (
+            <div className="flex flex-col gap-6">
+              <motion.div variants={listVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
+                <AnimatePresence mode="popLayout">
+                  {currentTasks.map(task => {
+                    const statusStyles = {
+                      Pending: 'bg-slate-50 text-slate-500 border-slate-200',
+                      'In Progress': 'bg-blue-50 text-blue-500 border-blue-200',
+                      Completed: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                    };
+                    const isToday = task.dueDate === new Date().toISOString().split('T')[0];
 
-                  return (
-                    <motion.div
-                      key={task.id}
-                      layout
-                      variants={cardVariants}
-                      exit="exit"
-                      whileHover={{ y: -5, transition: { duration: 0.15 } }}
-                      className="bg-white border border-slate-100 rounded-2xl p-5 shadow-premium hover:shadow-premium-hover transition-shadow duration-300 flex flex-col justify-between min-h-[220px] relative group cursor-pointer"
-                      onClick={() => triggerViewModal(task)}>
-                      <div className="flex justify-end items-center mb-3">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${statusStyles[task.status]}`}
-                          onClick={(e) => e.stopPropagation()}>
-                          {task.status}
-                        </span>
-                      </div>
+                    return (
+                      <motion.div
+                        key={task.id}
+                        layout
+                        variants={cardVariants}
+                        exit="exit"
+                        whileHover={{ y: -5, transition: { duration: 0.15 } }}
+                        className="bg-white border border-slate-100 rounded-2xl p-5 shadow-premium hover:shadow-premium-hover transition-shadow duration-300 flex flex-col justify-between min-h-[220px] relative group cursor-pointer"
+                        onClick={() => triggerViewModal(task)}>
+                        <div className="flex justify-end items-center mb-3">
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${statusStyles[task.status]}`}
+                            onClick={(e) => e.stopPropagation()}>
+                            {task.status}
+                          </span>
+                        </div>
 
-                      {/* Header details */}
-                      <div className="flex items-start gap-2.5 mt-1 flex-1 min-w-0">
-                        {/* Instant checkbox toggle */}
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (isToday) handleToggleComplete(task.id);
-                          }}
-                          className={`flex-shrink-0 w-5 h-5 border rounded-md flex items-center justify-center transition-all mt-0.5 ${!isToday ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${task.completed
-                            ? 'bg-emerald-500 border-emerald-500 text-white'
-                            : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50'
+                        {/* Header details */}
+                        <div className="flex items-start gap-2.5 mt-1 flex-1 min-w-0">
+                          {/* Instant checkbox toggle */}
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (isToday) handleToggleComplete(task.id);
+                            }}
+                            className={`flex-shrink-0 w-5 h-5 border rounded-md flex items-center justify-center transition-all mt-0.5 ${!isToday ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${task.completed
+                              ? 'bg-emerald-500 border-emerald-500 text-white'
+                              : 'border-slate-300 hover:border-slate-500 hover:bg-slate-50'
+                              }`}>
+                            {task.completed && <Check size={12} strokeWidth={3} />}
+                          </div>
+
+                          {/* Title text & Description */}
+                          <div className="flex-1 min-w-0">
+                            <h3
+                              className={`font-black text-slate-850 text-xl md:text-xl leading-tight truncate hover:text-blue-600 transition-colors ${task.completed ? 'line-through text-slate-400 decoration-slate-400 decoration-2' : ''}`}
+                            >
+                              {(task.title)}
+                            </h3>
+
+                            {/* Checklist preview list */}
+                            <div className="mt-3.5 space-y-2">
+                              {task.subtasks && task.subtasks.length > 0 ? (
+                                <div className="space-y-1.5 max-h-28 overflow-y-auto">
+                                  {task.subtasks.map((sub, index) => (
+                                    <div key={sub.id} className="flex items-center gap-2 text-lg font-semibold text-slate-700">
+                                      <span className={`w-1.5 h-1.5 rounded-full ${sub.completed ? 'bg-emerald-500' : 'bg-slate-350'}`}></span>
+                                      <span className="text-slate-400 text-sm font-bold">{index + 1}.</span>
+                                      <span className={`truncate leading-normal ${sub.completed ? 'line-through text-slate-400 decoration-slate-300' : ''}`}>{sub.text}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-sm text-slate-400 italic font-semibold">No checklist items registered for this date.</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Subtask checklist overview progress bar */}
+                        {task.subtasks && task.subtasks.length > 0 && (
+                          <div className="mt-4 space-y-1.5 px-0.5 w-full" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                              <span>Checklist Progress</span>
+                              <span>
+                                {task.subtasks.filter(s => s.completed).length} of {task.subtasks.length}
+                              </span>
+                            </div>
+                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%`
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="h-px bg-slate-100 w-full my-3.5"></div>
+
+                        <div className="flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
+                          <div className={`flex items-center gap-1 text-[10px] font-semibold ${!task.completed && new Date(task.dueDate) < new Date() ? 'text-red-500' : 'text-slate-400'
                             }`}>
-                          {task.completed && <Check size={12} strokeWidth={3} />}
-                        </div>
-
-                        {/* Title text & Description */}
-                        <div className="flex-1 min-w-0">
-                          <h3
-                            className={`font-black text-slate-850 text-xl md:text-xl leading-tight truncate hover:text-blue-600 transition-colors ${task.completed ? 'line-through text-slate-400 decoration-slate-400 decoration-2' : ''}`}
-                          >
-                            {(task.title)}
-                          </h3>
-
-                          {/* Checklist preview list */}
-                          <div className="mt-3.5 space-y-2">
-                            {task.subtasks && task.subtasks.length > 0 ? (
-                              <div className="space-y-1.5 max-h-28 overflow-y-auto">
-                                {task.subtasks.map((sub, index) => (
-                                  <div key={sub.id} className="flex items-center gap-2 text-lg font-semibold text-slate-700">
-                                    <span className={`w-1.5 h-1.5 rounded-full ${sub.completed ? 'bg-emerald-500' : 'bg-slate-350'}`}></span>
-                                    <span className="text-slate-400 text-sm font-bold">{index + 1}.</span>
-                                    <span className={`truncate leading-normal ${sub.completed ? 'line-through text-slate-400 decoration-slate-300' : ''}`}>{sub.text}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="text-sm text-slate-400 italic font-semibold">No checklist items registered for this date.</span>
-                            )}
+                            <Calendar size={12} />
+                            <span>{task.dueDate || 'No Deadline'}</span>
                           </div>
-                        </div>
-                      </div>
 
-                      {/* Subtask checklist overview progress bar */}
-                      {task.subtasks && task.subtasks.length > 0 && (
-                        <div className="mt-4 space-y-1.5 px-0.5 w-full" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                            <span>Checklist Progress</span>
-                            <span>
-                              {task.subtasks.filter(s => s.completed).length} of {task.subtasks.length}
-                            </span>
-                          </div>
-                          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div
-                              className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                              style={{
-                                width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%`
+                          <div className="flex gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+                            <button
+                              className="p-1 rounded-lg hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                triggerViewModal(task);
                               }}
-                            ></div>
+                              title="Expand Details"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            <button
+                              className={`p-1 rounded-lg transition-colors ${isToday ? 'hover:bg-slate-50 text-slate-500 hover:text-blue-600 cursor-pointer' : 'text-slate-300 cursor-not-allowed opacity-50'}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (isToday) triggerEditModal(task);
+                              }}
+                              title={isToday ? "Edit Parameters" : "Cannot edit past/future tasks"}
+                            >
+                              <Edit3 size={14} />
+                            </button>
+                            <button
+                              className="p-1 rounded-lg hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTask(task.id);
+                              }}
+                              title="Delete Task"
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           </div>
                         </div>
-                      )}
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </motion.div>
 
-                      <div className="h-px bg-slate-100 w-full my-3.5"></div>
-
-                      <div className="flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
-                        <div className={`flex items-center gap-1 text-[10px] font-semibold ${!task.completed && new Date(task.dueDate) < new Date() ? 'text-red-500' : 'text-slate-400'
-                          }`}>
-                          <Calendar size={12} />
-                          <span>{task.dueDate || 'No Deadline'}</span>
-                        </div>
-
-                        <div className="flex gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
-                          <button
-                            className="p-1 rounded-lg hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              triggerViewModal(task);
-                            }}
-                            title="Expand Details"
-                          >
-                            <Eye size={14} />
-                          </button>
-                          <button
-                            className={`p-1 rounded-lg transition-colors ${isToday ? 'hover:bg-slate-50 text-slate-500 hover:text-blue-600 cursor-pointer' : 'text-slate-300 cursor-not-allowed opacity-50'}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (isToday) triggerEditModal(task);
-                            }}
-                            title={isToday ? "Edit Parameters" : "Cannot edit past/future tasks"}
-                          >
-                            <Edit3 size={14} />
-                          </button>
-                          <button
-                            className="p-1 rounded-lg hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteTask(task.id);
-                            }}
-                            title="Delete Task"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </motion.div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
           ) : (
             // Clean Empty State Dashboard
             <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white border border-slate-100 rounded-2xl shadow-premium">
@@ -573,6 +586,7 @@ export default function Tasks({ user }) {
                         onChange={(e) => setFormLocation(e.target.value)}
                       >
                         <option value="" disabled>Select Location...</option>
+                        <option value="Chennai">Chennai</option>
                         <option value="Thiruvananthapuram">Thiruvananthapuram</option>
                         <option value="Chirayinkeezhu">Chirayinkeezhu</option>
                         <option value="Kottayam">Kottayam</option>

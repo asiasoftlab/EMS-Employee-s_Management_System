@@ -26,6 +26,20 @@ export default function Attendance({ user }) {
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
     return `${hours}h ${minutes}m ${seconds}s`;
   };
+
+  const getLiveOvertime = (clockIn) => {
+    if (!clockIn) return '0h 0m 0s';
+    const diffMs = Math.max(0, currentTime - new Date(clockIn));
+    const hours = diffMs / (1000 * 60 * 60);
+    if (hours > 7.5) {
+      const overtimeMs = diffMs - (7.5 * 60 * 60 * 1000);
+      const ohours = Math.floor(overtimeMs / (1000 * 60 * 60));
+      const ominutes = Math.floor((overtimeMs % (1000 * 60 * 60)) / (1000 * 60));
+      const oseconds = Math.floor((overtimeMs % (1000 * 60)) / 1000);
+      return `${ohours}h ${ominutes}m ${oseconds}s`;
+    }
+    return '0h 0m 0s';
+  };
   const fetchAttendance = async () => {
     setLoading(true);
     try {
@@ -93,13 +107,20 @@ export default function Attendance({ user }) {
   const isClockedOut = todayRecord?.clockOut != null;
 
   const totalOvertime = records.reduce((acc, curr) => {
-    const overtime = parseFloat(curr.overtime) || (curr.totalHours && curr.totalHours > 7.5 ? curr.totalHours - 7.5 : 0);
+    let overtime = parseFloat(curr.overtime) || (curr.totalHours && curr.totalHours > 7.5 ? curr.totalHours - 7.5 : 0);
+    if (!curr.clockOut && curr.clockIn) {
+      const diffMs = Math.max(0, currentTime - new Date(curr.clockIn));
+      const hours = diffMs / (1000 * 60 * 60);
+      if (hours > 7.5) {
+        overtime += (hours - 7.5);
+      }
+    }
     return acc + overtime;
   }, 0).toFixed(1);
 
   return (
     <div className="dashboard-container">
-      <Sidebar />
+      <Sidebar user={user} />
       <main className="main-dashboard">
         <header className="attendance-header">
           <div>
@@ -232,7 +253,13 @@ export default function Attendance({ user }) {
                               ? <span>{getLiveDuration(record.clockIn)}</span>
                               : '-')}
                         </td>
-                        <td className="attendance-td-hours">{rowOvertime > 0 ? `${rowOvertime.toFixed(1)} hrs` : '0 hrs'}</td>
+                        <td className="attendance-td-hours">
+                          {record.clockOut
+                            ? (rowOvertime > 0 ? `${rowOvertime.toFixed(1)} hrs` : '0 hrs')
+                            : (record.clockIn
+                              ? <span>{getLiveOvertime(record.clockIn)}</span>
+                              : '0 hrs')}
+                        </td>
                         <td className="attendance-td">
                           {record.clockOut ? (
                             record.totalHours >= 7.5 ? (

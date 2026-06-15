@@ -17,6 +17,44 @@ export const getEmployees = asyncHandler(async (req, res) => {
     employees.push({ _id: doc.id, ...data });
   });
 
+  try {
+    const attendanceSnapshot = await db.collection('attendance').get();
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+    const hoursMap = {};
+
+    attendanceSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.userId) {
+        if (!hoursMap[data.userId]) {
+          hoursMap[data.userId] = { today: 0, total: 0, currentClockIn: null };
+        }
+        const hours = parseFloat(data.totalHours) || 0;
+        hoursMap[data.userId].total += hours;
+
+        if (data.date === todayStr) {
+          hoursMap[data.userId].today += hours;
+          if (data.clockIn && !data.clockOut) {
+            hoursMap[data.userId].currentClockIn = data.clockIn;
+          }
+        }
+      }
+    });
+
+    employees.forEach(emp => {
+      if (hoursMap[emp._id]) {
+        emp.todayWorkingHours = hoursMap[emp._id].today;
+        emp.totalWorkingHours = hoursMap[emp._id].total;
+        emp.currentClockIn = hoursMap[emp._id].currentClockIn;
+      } else {
+        emp.todayWorkingHours = 0;
+        emp.totalWorkingHours = 0;
+        emp.currentClockIn = null;
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching attendance for hours calculation:', err);
+  }
+
   res.status(200).json(employees);
 });
 
@@ -32,6 +70,23 @@ export const getAllTasks = asyncHandler(async (req, res) => {
     const data = doc.data();
     userIds.add(data.employeeId);
     tasks.push({ _id: doc.id, ...data });
+  });
+
+  const attendanceSnapshot = await db.collection('attendance').get();
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+
+  const userAttMap = {}; // userId -> date -> { hours, clockIn }
+  attendanceSnapshot.forEach(doc => {
+    const d = doc.data();
+    if (d.userId && d.date) {
+      if (!userAttMap[d.userId]) userAttMap[d.userId] = {};
+      let hours = parseFloat(d.totalHours) || 0;
+      let clockIn = null;
+      if (d.date === todayStr && d.clockIn && !d.clockOut) {
+        clockIn = d.clockIn;
+      }
+      userAttMap[d.userId][d.date] = { hours, clockIn };
+    }
   });
 
   // Fetch users for those tasks
@@ -58,10 +113,34 @@ export const getAllTasks = asyncHandler(async (req, res) => {
       const user = usersMap[task.employeeId];
       return user !== undefined;
     })
-    .map(task => ({
-      ...task,
-      employeeId: usersMap[task.employeeId]
-    }));
+    .map(task => {
+      let attDateStr = '';
+      if (task.deadline) {
+        const secs = task.deadline._seconds ?? task.deadline.seconds;
+        let dObj;
+        if (secs !== undefined) dObj = new Date(secs * 1000);
+        else if (task.deadline.toDate) dObj = task.deadline.toDate();
+        else { try { dObj = new Date(task.deadline); } catch { } }
+
+        if (dObj && !isNaN(dObj)) {
+          attDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(dObj);
+        }
+      }
+
+      let todayWorkingHours = 0;
+      let currentClockIn = null;
+      if (attDateStr && userAttMap[task.employeeId] && userAttMap[task.employeeId][attDateStr]) {
+        todayWorkingHours = userAttMap[task.employeeId][attDateStr].hours;
+        currentClockIn = userAttMap[task.employeeId][attDateStr].clockIn;
+      }
+
+      return {
+        ...task,
+        todayWorkingHours,
+        currentClockIn,
+        employeeId: usersMap[task.employeeId]
+      };
+    });
 
   res.status(200).json(populatedTasks);
 });
@@ -98,20 +177,45 @@ export const getEmployeeTasksById = asyncHandler(async (req, res) => {
     .where('employeeId', '==', req.params.id)
     .get();
 
+  const attSnapshot = await db.collection('attendance')
+    .where('userId', '==', req.params.id)
+    .get();
+
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+  const attMap = {};
+  attSnapshot.forEach(doc => {
+    const d = doc.data();
+    if (d.date) {
+      let hours = parseFloat(d.totalHours) || 0;
+      let clockIn = null;
+      if (d.date === todayStr && d.clockIn && !d.clockOut) {
+        clockIn = d.clockIn;
+      }
+      attMap[d.date] = { hours, clockIn };
+    }
+  });
+
   const tasks = [];
   tasksSnapshot.forEach(doc => {
     const data = doc.data();
 
     // Normalize deadline
     let deadlineStr = '';
+    let attDateStr = '';
     if (data.deadline) {
       const secs = data.deadline._seconds ?? data.deadline.seconds;
+      let dObj;
       if (secs !== undefined) {
-        deadlineStr = new Date(secs * 1000).toISOString().split('T')[0];
+        dObj = new Date(secs * 1000);
       } else if (data.deadline.toDate) {
-        deadlineStr = data.deadline.toDate().toISOString().split('T')[0];
+        dObj = data.deadline.toDate();
       } else {
-        try { deadlineStr = new Date(data.deadline).toISOString().split('T')[0]; } catch { }
+        try { dObj = new Date(data.deadline); } catch { }
+      }
+
+      if (dObj && !isNaN(dObj)) {
+        deadlineStr = dObj.toISOString().split('T')[0];
+        attDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(dObj);
       }
     }
 
@@ -123,10 +227,19 @@ export const getEmployeeTasksById = asyncHandler(async (req, res) => {
       return s ? s * 1000 : new Date(ts).getTime();
     };
 
+    let todayWorkingHours = 0;
+    let currentClockIn = null;
+    if (attDateStr && attMap[attDateStr]) {
+      todayWorkingHours = attMap[attDateStr].hours;
+      currentClockIn = attMap[attDateStr].clockIn;
+    }
+
     tasks.push({
       _id: doc.id,
       ...data,
       deadline: deadlineStr,
+      todayWorkingHours,
+      currentClockIn,
       createdAt: toMs(data.createdAt),
       updatedAt: toMs(data.updatedAt),
     });

@@ -277,7 +277,7 @@ export default function Leaves({ user }) {
 
   return (
     <div className="dashboard-container">
-      <Sidebar />
+      <Sidebar user={user} />
       <main className="main-dashboard">
         <header className="leaves-header">
           <div>

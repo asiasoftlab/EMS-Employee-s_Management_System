@@ -3,12 +3,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
+  /* background-image: url('/'); */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 .admin-login-page .glass-card {
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 400px;
 }
 
 .admin-login-page .card-title {

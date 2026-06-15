@@ -41,7 +41,7 @@ export default function Profile({ user }) {
 
   return (
     <div className="dashboard-container">
-      <Sidebar />
+      <Sidebar user={user} />
       <main className="main-dashboard overflow-y-auto">
         <header className="profile-header">
           <div>

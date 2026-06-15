@@ -43,7 +43,7 @@ export default function NoticeBoard({ user }) {
 
   return (
     <div className="dashboard-container">
-      <Sidebar />
+      <Sidebar user={user} />
       <main className="main-dashboard">
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex-1 pr-4">
