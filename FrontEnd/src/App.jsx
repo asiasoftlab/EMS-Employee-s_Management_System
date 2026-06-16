@@ -35,6 +35,16 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
+  const [toastPos, setToastPos] = useState(window.innerWidth <= 768 ? 'bottom-center' : 'top-center');
+
+  useEffect(() => {
+    const handleResize = () => {
+      setToastPos(window.innerWidth <= 768 ? 'bottom-center' : 'top-center');
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // --- HEARTBEAT TRACKING ---
   useEffect(() => {
     if (!user || user.role !== 'employee') return;
@@ -82,7 +92,14 @@ export default function App() {
   return (
     <div className="app-container">
       <PWAPrompt />
-      <ToastContainer theme="light" position="bottom-right" autoClose={2000} />
+      <ToastContainer 
+        position={toastPos} 
+        autoClose={3000} 
+        hideProgressBar={true}
+        closeButton={false}
+        toastClassName="nextjs-toast"
+        bodyClassName="nextjs-toast-body"
+      />
       <NavWrapper user={user} setUser={setUser} />
       <main className="main-content" key={location.pathname}>
         <Routes>

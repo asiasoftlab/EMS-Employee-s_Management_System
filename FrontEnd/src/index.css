@@ -93,3 +93,60 @@ body {
     padding: 1.5rem 1rem;
   }
 }
+
+/* Next.js (Sonner-like) Toast Styling */
+.Toastify__toast-container--bottom-center {
+  bottom: 2rem !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.Toastify__toast-container--top-center {
+  top: 2rem !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nextjs-toast {
+  background: white !important;
+  color: #171717 !important;
+  border-radius: 10px !important; 
+  border: 1px solid #e5e5e5 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  min-height: 40px !important;
+  padding: 8px 20px !important;
+  margin-bottom: 12px !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  width: auto !important;
+  max-width: fit-content !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  cursor: default !important;
+  font-family: inherit !important;
+}
+
+.nextjs-toast-body {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Slow-motion smooth enter/exit animations */
+.Toastify__bounce-enter--bottom-center,
+.Toastify__bounce-enter--top-center {
+  animation-timing-function: ease-out !important;
+  animation-duration: 0.9s !important;
+}
+
+.Toastify__bounce-exit--bottom-center,
+.Toastify__bounce-exit--top-center {
+  animation-timing-function: ease-in !important;
+  animation-duration: 0.5s !important;
+}
