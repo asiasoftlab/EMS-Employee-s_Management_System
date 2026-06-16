@@ -445,6 +445,7 @@
   flex-direction: column;
   gap: 2.25rem;
   background: transparent;
+  min-width: 0;
 }
 
 /* Upper Toolbar */

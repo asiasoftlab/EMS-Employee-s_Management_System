@@ -156,7 +156,7 @@ export default function Attendance({ user }) {
 
             {isClockedIn && !isClockedOut && (
               <>
-                <p className="attendance-action-text">You clocked in at <strong>{formatTime(todayRecord.clockIn)}</strong>.</p>
+                <p className="attendance-action-text">You check-in at <strong>{formatTime(todayRecord.clockIn)}</strong>.</p>
                 <p className="attendance-action-text" style={{ marginTop: '0.5rem' }}>
                   Live Hours : <strong>{getLiveDuration(todayRecord.clockIn)}</strong>
                 </p>
@@ -287,7 +287,7 @@ export default function Attendance({ user }) {
         </section>
 
       </main>
-      {/* <ChatPanel user={user} /> */}
+      <ChatPanel user={user} />
     </div>
   );
 }

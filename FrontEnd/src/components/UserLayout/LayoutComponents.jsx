@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import axios from '../../config/axiosConfig';
 import { socket } from '../../config/socket';
 import { toast } from 'react-toastify';
+import './LayoutComponents.css';
 
 export const Sidebar = ({ user }) => {
   const [unreadNotices, setUnreadNotices] = useState(0);
@@ -37,10 +38,10 @@ export const Sidebar = ({ user }) => {
         const { data } = await axios.get('/api/attendance');
         const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
         const foundToday = data.find(r => r.date === today);
-        
+
         if (foundToday && foundToday.clockIn && !foundToday.clockOut) {
           const targetDurationMs = 7.5 * 60 * 60 * 1000;
-          
+
           const evaluateTime = () => {
             const diffMs = new Date() - new Date(foundToday.clockIn);
             if (diffMs >= targetDurationMs) {
@@ -56,11 +57,11 @@ export const Sidebar = ({ user }) => {
           evaluateTime();
           attendanceInterval = setInterval(evaluateTime, 60000);
         }
-      } catch (err) {}
+      } catch (err) { }
     };
-    
+
     checkShiftCompletion();
-    
+
     return () => {
       if (attendanceInterval) clearInterval(attendanceInterval);
     };
@@ -68,77 +69,59 @@ export const Sidebar = ({ user }) => {
 
   return (
     <>
-    <aside className="sidebar">
-      <nav className="sidebar-nav">
-        <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-          <span className="nav-label">My Tasks</span>
-        </NavLink>
-        <NavLink to="/attendance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20"></path><path d="m4.93 4.93 14.14 14.14M4.93 19.07 19.07 4.93"></path></svg>
-          <span className="nav-label">Attendance</span>
-        </NavLink>
-        <NavLink to="/leaves" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path><path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"></path><path d="M13 13h4"></path><path d="M13 17h4"></path></svg>
-          <span className="nav-label">Leave Requests</span>
-        </NavLink>
-        <NavLink to="/notice" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} style={{ position: 'relative' }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>
-          <span className="nav-label">Notice Board</span>
-          {unreadNotices > 0 && (
-            <span style={{
-              position: 'absolute',
-              top: '8px',
-              left: '20px',
-              backgroundColor: '#ef4444',
-              color: 'white',
-              fontSize: '10px',
-              fontWeight: 'bold',
-              minWidth: '16px',
-              height: '16px',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0 4px',
-              border: '1px solid white'
-            }}>
-              {unreadNotices}
-            </span>
-          )}
-        </NavLink>
-        <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <span className="nav-label">Profile</span>
-        </NavLink>
-
-        <div className="company-policies-wrapper" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-          <NavLink to="/readme" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            <span className="nav-label">Company Policies</span>
+      <aside className="sidebar">
+        <nav className="sidebar-nav">
+          <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20"></path><path d="m4.93 4.93 14.14 14.14M4.93 19.07 19.07 4.93"></path></svg>
+            <span className="nav-label">Attendance</span>
           </NavLink>
+          <NavLink to="/tasks" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+            <span className="nav-label">My Tasks</span>
+          </NavLink>
+          <NavLink to="/leaves" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path><path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"></path><path d="M13 13h4"></path><path d="M13 17h4"></path></svg>
+            <span className="nav-label">Leave Requests</span>
+          </NavLink>
+          <NavLink to="/notice" className={({ isActive }) => `nav-item nav-notice-link ${isActive ? 'active' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>
+            <span className="nav-label">Notice Board</span>
+            {unreadNotices > 0 && (
+              <span className="unread-badge">
+                {unreadNotices}
+              </span>
+            )}
+          </NavLink>
+          <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span className="nav-label">Profile</span>
+          </NavLink>
+
+          <div className="company-policies-wrapper">
+            <NavLink to="/readme" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              <span className="nav-label">Company Policies</span>
+            </NavLink>
+          </div>
+        </nav>
+      </aside>
+      {showGreetingModal && (
+        <div className="greeting-modal-overlay">
+          <div className="greeting-modal-content">
+            <div className="greeting-modal-emoji">🎉</div>
+            <h2 className="greeting-modal-title">Congratulations!</h2>
+            <p className="greeting-modal-text">
+              You've officially completed your <strong>8:00 hrs</strong> shift today. Great job <strong>{user?.name}</strong> and thank you for your hard work!
+            </p>
+            <button
+              onClick={() => setShowGreetingModal(false)}
+              className="greeting-modal-button"
+            >
+              Awesome!
+            </button>
+          </div>
         </div>
-      </nav>
-    </aside>
-    {showGreetingModal && (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
-        <div style={{ backgroundColor: '#fff', padding: '2.5rem 2rem', borderRadius: '24px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem', animation: 'bounce 2s infinite' }}>🎉</div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0f172a', marginBottom: '0.75rem' }}>Congratulations!</h2>
-          <p style={{ color: '#475569', fontSize: '1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
-            You've officially completed your <strong>8:00 hrs</strong> shift today. Great job <strong>{user?.name}</strong> and thank you for your hard work! 
-          </p>
-          <button 
-            onClick={() => setShowGreetingModal(false)}
-            style={{ width: '100%', backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '0.85rem', borderRadius: '12px', fontSize: '1rem', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
-            onMouseOver={(e) => { e.target.style.backgroundColor = '#1d4ed8'; e.target.style.transform = 'scale(1.02)'; }}
-            onMouseOut={(e) => { e.target.style.backgroundColor = '#2563eb'; e.target.style.transform = 'scale(1)'; }}
-          >
-            Awesome!
-          </button>
-        </div>
-      </div>
-    )}
+      )}
     </>
   );
 };
@@ -237,16 +220,16 @@ export const ChatPanel = ({ user }) => {
   });
 
   return (
-    <aside className="notification-panel" style={{ display: 'flex', flexDirection: 'column', padding: 0, gap: 0, overflow: 'hidden' }}>
-      <div className="panel-title" style={{ flexShrink: 0, padding: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)', background: '#fff', margin: 0 }}>
+    <aside className="notification-panel chat-panel-aside">
+      <div className="panel-title chat-panel-title">
         Live Chat
-        <span style={{ fontSize: '0.75rem', background: 'var(--primary)', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>
+        <span className="chat-panel-admin-badge">
           Admin
         </span>
       </div>
       <div className="user-chat-messages">
         {groupedMessages.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#54656f', fontSize: '0.85rem', marginTop: '2rem' }}>
+          <div className="chat-empty-state">
             No messages yet. Say hi!
           </div>
         ) : (

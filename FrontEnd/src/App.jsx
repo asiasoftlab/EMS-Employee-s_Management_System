@@ -84,7 +84,7 @@ export default function App() {
       <NavWrapper user={user} setUser={setUser} />
       <main className="main-content" key={location.pathname}>
         <Routes>
-          <Route path="/" element={user ? (user.role === 'employee' ? <Tasks user={user} /> : <Navigate to="/admin" replace />) : (<Navigate to="/login" replace />)} />
+          <Route path="/" element={user ? (user.role === 'employee' ? <Attendance user={user} /> : <Navigate to="/admin" replace />) : (<Navigate to="/login" replace />)} />
           <Route path="/tasks" element={user ? (user.role === "employee" ? <Tasks user={user} /> : <Navigate to="/admin" replace />) : <Navigate to="/login" replace />} />
           <Route path="/attendance" element={user ? (user.role === "employee" ? <Attendance user={user} /> : <Navigate to="/admin" replace />) : <Navigate to="/login" replace />} />
           <Route path="/leaves" element={user ? (user.role === "employee" ? <Leaves user={user} /> : <Navigate to="/admin" replace />) : <Navigate to="/login" replace />} />

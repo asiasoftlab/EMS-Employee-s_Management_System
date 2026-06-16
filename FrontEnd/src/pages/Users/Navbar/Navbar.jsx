@@ -18,12 +18,12 @@ export default function Navbar({ user, setUser }) {
   return (
     <nav className="navbar">
       <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-        <img src="/EMPLOYEE.png" alt="EMS Logo" style={{ height: '120px',objectFit: 'contain', transform: 'scale(1.4)', transformOrigin: 'left center' }} />
+        <img src="/EMPLOYEE.png" alt="EMS Logo" style={{ height: '120px', objectFit: 'contain', transform: 'scale(1.4)', transformOrigin: 'left center' }} />
       </Link>
-     <div className="nav-links">
+      <div className="nav-links">
         {user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <div className="user-greeting" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
               <span className="user-name" style={{ fontWeight: '600', color: 'var(--text-primary)', lineHeight: '1.2' }}>"Hello,👋{user.name}"</span>
               <span className="user-email" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.2' }}>{user.email}</span>
             </div>
