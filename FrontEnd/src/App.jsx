@@ -17,6 +17,7 @@ import Loading from './components/Loading/Loading';
 import AdminDashboard from './pages/Admin/Dashboard/AdminDashboard';
 import AdminLogin from './pages/Admin/Login/AdminLogin';
 import AdminLeaves from './pages/Admin/Leaves/AdminLeaves';
+import PWAPrompt from './components/PWAPrompt/PWAPrompt';
 import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
 import { useLocation } from 'react-router-dom';
@@ -80,6 +81,7 @@ export default function App() {
 
   return (
     <div className="app-container">
+      <PWAPrompt />
       <ToastContainer theme="light" position="bottom-right" autoClose={2000} />
       <NavWrapper user={user} setUser={setUser} />
       <main className="main-content" key={location.pathname}>

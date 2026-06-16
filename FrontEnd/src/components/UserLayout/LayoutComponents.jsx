@@ -130,7 +130,7 @@ export const ChatPanel = ({ user }) => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef(null);
+  const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
 
   const chatId = user?._id;
@@ -166,7 +166,10 @@ export const ChatPanel = ({ user }) => {
   }, [chatId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+      // Scroll only the chat container, do NOT use scrollIntoView as it forces the whole page window down
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const handleSend = async (e) => {
@@ -227,7 +230,7 @@ export const ChatPanel = ({ user }) => {
           Admin
         </span>
       </div>
-      <div className="user-chat-messages">
+      <div className="user-chat-messages" ref={chatContainerRef}>
         {groupedMessages.length === 0 ? (
           <div className="chat-empty-state">
             No messages yet. Say hi!
@@ -253,7 +256,6 @@ export const ChatPanel = ({ user }) => {
             );
           })
         )}
-        <div ref={bottomRef} />
       </div>
       <form onSubmit={handleSend} className="chat-input-container">
         <input

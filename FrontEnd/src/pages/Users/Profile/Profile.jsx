@@ -40,12 +40,12 @@ export default function Profile({ user }) {
   // We use the .profile-input class from Profile.css for form elements
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-container profile-page-container">
       <Sidebar user={user} />
       <main className="main-dashboard overflow-y-auto">
         <header className="profile-header">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">User Profile</h1>
+            <h1 className="text-2xl font-bold text-slate-800">My Profile</h1>
             <p className="text-sm text-slate-500 mt-1">Manage your personal information and account settings.</p>
           </div>
           <div className="profile-header-actions">
@@ -204,8 +204,33 @@ export default function Profile({ user }) {
               )}
             </div>
           </div>
+
+
+
         </div>
       </main>
+
+      <div className="profile-right-panel">
+        <h3 className="text-lg font-bold text-slate-800 mb-4">App Settings</h3>
+        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+          <div>
+            <h4 className="font-semibold text-slate-800">Download Mobile App</h4>
+            <p className="text-sm text-slate-500 mt-1">Install the EMS application on your device for quick access.</p>
+          </div>
+          <button
+            onClick={() => {
+              if (window.deferredPWAInstallPrompt) {
+                window.deferredPWAInstallPrompt.prompt();
+              } else {
+                toast.info("App is already installed or your browser doesn't support installation.");
+              }
+            }}
+            style={{ background: 'var(--primary)', color: 'white', padding: '0.625rem 1.25rem', borderRadius: '8px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
+          >
+            Install App
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
