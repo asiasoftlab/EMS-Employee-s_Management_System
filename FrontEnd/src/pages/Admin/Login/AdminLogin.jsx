@@ -51,6 +51,9 @@ export default function AdminLogin({ setUser }) {
   return (
     <div className="admin-login-page">
       <div className="glass-card">
+        <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+          <img src="/ems-logo.png" alt="EMS Logo" style={{ height: '95px', margin: '0 auto' }} />
+        </div>
         <h1 className="card-title">Admin Portal</h1>
         <p className="card-subtitle">Secure access for system administrators</p>
 

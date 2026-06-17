@@ -21,6 +21,9 @@ import PWAPrompt from './components/PWAPrompt/PWAPrompt';
 import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
 import { useLocation } from 'react-router-dom';
+import useAutoLogout from './hooks/useAutoLogout';
+import useHeartbeat from './hooks/useHeartbeat';
+import useGlobalNotifications from './hooks/useGlobalNotifications';
 
 const NavWrapper = ({ user, setUser }) => {
   const location = useLocation();
@@ -34,7 +37,6 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
-
   const [toastPos, setToastPos] = useState(window.innerWidth <= 768 ? 'bottom-center' : 'top-center');
 
   useEffect(() => {
@@ -46,44 +48,17 @@ export default function App() {
   }, []);
 
   // --- HEARTBEAT TRACKING ---
-  useEffect(() => {
-    if (!user || user.role !== 'employee') return;
-    
-    let isActive = true; // initially active
-    
-    const updateActivity = () => {
-      isActive = true;
-    };
-    
-    window.addEventListener('mousemove', updateActivity);
-    window.addEventListener('keydown', updateActivity);
-    window.addEventListener('click', updateActivity);
-    
-    const heartbeatInterval = setInterval(async () => {
-      if (isActive) {
-        try {
-          await axios.post('/auth/activity');
-          isActive = false; // reset until next user interaction
-        } catch (err) {
-          console.error('Failed to update activity heartbeat', err);
-        }
-      }
-    }, 5 * 60 * 1000); // 5 minutes
-    
-    // Initial ping
-    axios.post('/auth/activity').catch(() => {});
-    
-    return () => {
-      window.removeEventListener('mousemove', updateActivity);
-      window.removeEventListener('keydown', updateActivity);
-      window.removeEventListener('click', updateActivity);
-      clearInterval(heartbeatInterval);
-    };
-  }, [user]);
+  useHeartbeat(user);
+
+  // --- GLOBAL DESKTOP NOTIFICATIONS ---
+  useGlobalNotifications(user);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  // --- AUTO LOGOUT & ALERT TRACKING ---
+  useAutoLogout(user, setUser);
 
   if (loading) {
     return <Loading setUser={setUser} setLoading={setLoading} />;
@@ -92,14 +67,7 @@ export default function App() {
   return (
     <div className="app-container">
       <PWAPrompt />
-      <ToastContainer 
-        position={toastPos} 
-        autoClose={3000} 
-        hideProgressBar={true}
-        closeButton={false}
-        toastClassName="nextjs-toast"
-        bodyClassName="nextjs-toast-body"
-      />
+      <ToastContainer position={toastPos} autoClose={3000} hideProgressBar={true} closeButton={false} toastClassName="nextjs-toast" bodyClassName="nextjs-toast-body"/>
       <NavWrapper user={user} setUser={setUser} />
       <main className="main-content" key={location.pathname}>
         <Routes>

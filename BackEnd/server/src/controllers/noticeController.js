@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import { db } from '../config/db.js';
 import { FieldValue } from 'firebase-admin/firestore';
+import { getIO } from '../../socket.js';
 
 // @desc    Get all notices
 // @route   GET /api/notices
@@ -39,6 +40,9 @@ export const createNotice = asyncHandler(async (req, res) => {
 
   const docRef = await db.collection('notices').add(noticeData);
   const newDoc = await docRef.get();
+
+  const io = getIO();
+  if (io) io.emit('new_notice', { title: noticeData.title, authorName: noticeData.authorName });
 
   res.status(201).json({ id: newDoc.id, ...newDoc.data() });
 });

@@ -161,7 +161,7 @@ export default function AdminDashboard({ user }) {
       Description: task.description || task.notes || '',
       Status: task.status || '',
       Priority: task.priority || '',
-      Deadline: task.deadline ? formatDate(task.deadline) : '',
+      Date: task.deadline ? formatDate(task.deadline) : '',
       Location: task.location || ''
     }));
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -184,7 +184,7 @@ export default function AdminDashboard({ user }) {
       task.location || ''
     ]);
     autoTable(doc, {
-      head: [['Title', 'Status', 'Priority', 'Deadline', 'Location']],
+      head: [['Title', 'Status', 'Priority', 'Date', 'Location']],
       body: tableData,
       startY: 20
     });
@@ -204,7 +204,7 @@ export default function AdminDashboard({ user }) {
       EmployeeId: typeof task.employeeId === 'string' ? task.employeeId : task.employeeId?._id,
       Title: task.title || '',
       Status: task.status || '',
-      Deadline: task.deadline ? formatDate(task.deadline) : ''
+      Date: task.deadline ? formatDate(task.deadline) : ''
     }));
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(tasksData), "Tasks");
 
@@ -504,6 +504,7 @@ export default function AdminDashboard({ user }) {
       <aside className={`admin-sidebar-pane ${!showMobileSidebar ? 'mobile-hidden' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-title-wrapper">
+            <img src="/ems-logo.png" alt="EMS Logo" style={{ height: '60px', objectFit: 'contain' }} />
             <h2>Employee Directory</h2>
           </div>
         </div>
@@ -598,6 +599,7 @@ export default function AdminDashboard({ user }) {
             <button className="mobile-menu-toggle mr-2 block lg:hidden" onClick={() => setShowMobileSidebar(!showMobileSidebar)}>
               <AlignLeft size={20} />
             </button>
+           
             <div>
               <h3>Asia Softlab Employee's</h3>
               <p>{user.email}</p>
@@ -761,7 +763,7 @@ export default function AdminDashboard({ user }) {
                       <th>Location</th>
                       <th>Status</th>
                       <th>Total Working Hrs</th>
-                      <th>Deadline</th>
+                      <th>Date</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -908,7 +910,7 @@ export default function AdminDashboard({ user }) {
                 <div className="task-modal-meta-item">
                   <span className="meta-label">
                     <Calendar size={13} />
-                    Due Date
+                    Date
                   </span>
                   <span className="meta-value">{formatDate(selectedTask.deadline) || '—'}</span>
                 </div>

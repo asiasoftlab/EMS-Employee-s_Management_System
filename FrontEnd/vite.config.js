@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['EMS logo.png'],
+      includeAssets: ['ems-logo.png'],
       manifest: {
         name: 'Employee Management System',
         short_name: 'EMS',
@@ -16,20 +16,25 @@ export default defineConfig({
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
+        start_url: '/',
+        id: '/',
         icons: [
           {
-            src: 'EMS logo.png',
+            src: 'ems-logo.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: 'EMS logo.png',
+            src: 'ems-logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
           }
         ]
+      },
+      devOptions: {
+        enabled: true
       }
     })
   ],

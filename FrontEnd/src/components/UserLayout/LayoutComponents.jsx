@@ -103,6 +103,9 @@ export const Sidebar = ({ user }) => {
               <span className="nav-label">Company Policies</span>
             </NavLink>
           </div>
+          <div className="version-info">
+            <p>Version : V1.0.3</p>
+          </div>
         </nav>
       </aside>
       {showGreetingModal && (

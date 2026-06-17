@@ -437,7 +437,7 @@ export default function Tasks({ user }) {
                           <div className={`flex items-center gap-1 text-[10px] font-semibold ${!task.completed && new Date(task.dueDate) < new Date() ? 'text-red-500' : 'text-slate-400'
                             }`}>
                             <Calendar size={12} />
-                            <span>{task.dueDate || 'No Deadline'}</span>
+                            <span>{task.dueDate || 'No Date'}</span>
                           </div>
 
                           <div className="flex gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
@@ -554,7 +554,7 @@ export default function Tasks({ user }) {
 
                     {/* Due Date */}
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Due Date Deadline</label>
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Date</label>
                       <input
                         type="date"
                         className="px-3 py-2 border border-slate-200 rounded-xl outline-none text-slate-800 focus:border-slate-400 cursor-pointer text-xs bg-white font-semibold"
@@ -748,10 +748,10 @@ export default function Tasks({ user }) {
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wide">Due Date Deadline</span>
+                    <span className="text-[12px] font-extrabold text-slate-400 uppercase tracking-wide">Date</span>
                     <span className="font-semibold text-slate-705 flex items-center gap-1.5 mt-0.5">
                       <Calendar size={13} className="text-slate-400" />
-                      {selectedTask.dueDate || 'No deadline assigned'}
+                      {selectedTask.dueDate || 'No date assigned'}
                     </span>
                   </div>
                 </div>
