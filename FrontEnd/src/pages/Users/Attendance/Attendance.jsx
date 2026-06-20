@@ -20,7 +20,14 @@ export default function Attendance({ user }) {
 
   const getLiveDuration = (clockIn) => {
     if (!clockIn) return '0h 0m 0s';
-    const diffMs = Math.max(0, currentTime - new Date(clockIn));
+    const clockInDate = new Date(clockIn);
+    const sixPM = new Date(clockInDate);
+    sixPM.setHours(18, 0, 0, 0);
+    
+    let endTime = currentTime;
+    if (endTime > sixPM) endTime = sixPM;
+    
+    const diffMs = Math.max(0, endTime - clockInDate);
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
@@ -29,7 +36,14 @@ export default function Attendance({ user }) {
 
   const getLiveOvertime = (clockIn) => {
     if (!clockIn) return '0h 0m 0s';
-    const diffMs = Math.max(0, currentTime - new Date(clockIn));
+    const clockInDate = new Date(clockIn);
+    const sixPM = new Date(clockInDate);
+    sixPM.setHours(18, 0, 0, 0);
+
+    let endTime = currentTime;
+    if (endTime > sixPM) endTime = sixPM;
+
+    const diffMs = Math.max(0, endTime - clockInDate);
     const hours = diffMs / (1000 * 60 * 60);
     if (hours > 7.5) {
       const overtimeMs = diffMs - (7.5 * 60 * 60 * 1000);
@@ -109,7 +123,14 @@ export default function Attendance({ user }) {
   const totalOvertime = records.reduce((acc, curr) => {
     let overtime = parseFloat(curr.overtime) || (curr.totalHours && curr.totalHours > 7.5 ? curr.totalHours - 7.5 : 0);
     if (!curr.clockOut && curr.clockIn) {
-      const diffMs = Math.max(0, currentTime - new Date(curr.clockIn));
+      const clockInDate = new Date(curr.clockIn);
+      const sixPM = new Date(clockInDate);
+      sixPM.setHours(18, 0, 0, 0);
+      
+      let endTime = currentTime;
+      if (endTime > sixPM) endTime = sixPM;
+      
+      const diffMs = Math.max(0, endTime - clockInDate);
       const hours = diffMs / (1000 * 60 * 60);
       if (hours > 7.5) {
         overtime += (hours - 7.5);

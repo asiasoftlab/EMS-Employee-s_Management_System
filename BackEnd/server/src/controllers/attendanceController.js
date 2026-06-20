@@ -15,9 +15,42 @@ export const getAttendance = asyncHandler(async (req, res) => {
     .get();
 
   const records = [];
+  const now = new Date();
+  const updatePromises = [];
+
   snapshot.forEach(doc => {
-    records.push({ _id: doc.id, ...doc.data() });
+    let record = { _id: doc.id, ...doc.data() };
+
+    if (!record.clockOut && record.clockIn) {
+      const clockInTime = new Date(record.clockIn);
+      const sixPM = new Date(clockInTime);
+      sixPM.setHours(18, 0, 0, 0); // 6:00 PM on the day of clock-in
+
+      // If current time is past 6 PM and clock-in was before 6 PM
+      if (now > sixPM && clockInTime < sixPM) {
+        const clockOutTime = sixPM.toISOString();
+        const diffMs = sixPM - clockInTime;
+        const totalHours = (diffMs / (1000 * 60 * 60)).toFixed(2);
+        
+        record.clockOut = clockOutTime;
+        record.totalHours = parseFloat(totalHours);
+        
+        const updatePromise = db.collection('attendance').doc(doc.id).update({
+          clockOut: clockOutTime,
+          totalHours: parseFloat(totalHours),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          autoClockedOut: true
+        });
+        updatePromises.push(updatePromise);
+      }
+    }
+
+    records.push(record);
   });
+
+  if (updatePromises.length > 0) {
+    await Promise.all(updatePromises);
+  }
 
   // Sort by date descending
   records.sort((a, b) => new Date(b.date) - new Date(a.date));
