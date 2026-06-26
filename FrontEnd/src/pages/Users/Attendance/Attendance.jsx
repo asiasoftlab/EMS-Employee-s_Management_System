@@ -5,6 +5,7 @@ import axios from '../../../config/axiosConfig';
 import { toast } from 'react-toastify';
 import '../Tasks/Tasks.css'; // Reusing general layout styles
 import './Attendance.css';
+import { importantDays, companyHolidays } from '../../../utils/importantDays';
 
 export default function Attendance({ user }) {
   const [records, setRecords] = useState([]);
@@ -12,6 +13,15 @@ export default function Attendance({ user }) {
   const [actionLoading, setActionLoading] = useState(false);
   const [todayRecord, setTodayRecord] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  const todayDateObj = new Date();
+  const monthStr = String(todayDateObj.getMonth() + 1).padStart(2, '0');
+  const dayStr = String(todayDateObj.getDate()).padStart(2, '0');
+  const todayKey = `${monthStr}-${dayStr}`;
+  const todayEvent = importantDays[todayKey];
+  const isCompanyHoliday = !!companyHolidays[todayKey];
+  const holidayName = companyHolidays[todayKey];
+  const [showHolidayModal, setShowHolidayModal] = useState(isCompanyHoliday);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -147,6 +157,11 @@ export default function Attendance({ user }) {
           <div>
             <h1 className="attendance-header-title">Your Attendance</h1>
             <p className="attendance-header-subtitle">Log your hours and view attendance history.</p>
+            {todayEvent && (
+              <p style={{ marginTop: '0.25rem', fontWeight: '500', color: '#059669', fontSize: '0.9rem' }}>
+                Today : {todayEvent}
+              </p>
+            )}
           </div>
           <button onClick={fetchAttendance} disabled={loading} className="attendance-refresh-btn">
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
@@ -162,9 +177,30 @@ export default function Attendance({ user }) {
             </div>
             <h2 className="attendance-status-heading">Current Status</h2>
 
+            {isCompanyHoliday && !isClockedIn && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <p className="attendance-action-text">Today is a Company Holiday: <strong>{holidayName}</strong></p>
+                <div className="attendance-badge-completed" style={{ background: '#ecfdf5', color: '#065f46', borderColor: '#34d399', marginBottom: '1rem' }}>
+                 Enjoy your day off!
+                </div>
+                <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>Working anyway? You can still clock in below.</p>
+              </div>
+            )}
+
+            {isCompanyHoliday && isClockedIn && (
+              <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '8px' }}>
+                <p style={{ margin: 0, color: '#b45309', fontWeight: '500', fontSize: '0.95rem' }}>
+                  🌟 Special Appreciation!
+                </p>
+                <p style={{ margin: '0.25rem 0 0', color: '#92400e', fontSize: '0.85rem' }}>
+                  Thank you for your dedication to work on <strong>{holidayName}</strong>. Your effort doesn't go unnoticed!
+                </p>
+              </div>
+            )}
+
             {!isClockedIn && (
               <>
-                <p className="attendance-action-text">You have not clocked in yet today.</p>
+                {!isCompanyHoliday && <p className="attendance-action-text">You have not clocked in yet today.</p>}
                 <button
                   onClick={handleClockIn}
                   disabled={actionLoading}
@@ -208,7 +244,14 @@ export default function Attendance({ user }) {
                 <div className="attendance-stat-title">
                   <Calendar size={16} /> Total Days Present
                 </div>
-                <div className="attendance-stat-value">{records.length}</div>
+                <div className="attendance-stat-value">
+                  {records.filter(r => {
+                    if (!r.date) return false;
+                    const d = new Date(r.date);
+                    const now = new Date();
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                  }).length}/{new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()} ({new Date().toLocaleString('default', { month: 'short' })})
+                </div>
               </div>
               <div className="attendance-stat-card">
                 <div className="attendance-stat-title">
@@ -261,6 +304,11 @@ export default function Attendance({ user }) {
                 </thead>
                 <tbody>
                   {[...records].sort((a, b) => new Date(b.date) - new Date(a.date)).map(record => {
+                    const rowDate = new Date(record.date);
+                    const rowMonth = String(rowDate.getMonth() + 1).padStart(2, '0');
+                    const rowDay = String(rowDate.getDate()).padStart(2, '0');
+                    const rowKey = `${rowMonth}-${rowDay}`;
+                    const isRecordHoliday = companyHolidays[rowKey];
                     const rowOvertime = parseFloat(record.overtime) || (record.totalHours && record.totalHours > 7.5 ? record.totalHours - 7.5 : 0);
                     return (
                       <tr key={record._id} className="attendance-tr">
@@ -282,7 +330,15 @@ export default function Attendance({ user }) {
                               : '0 hrs')}
                         </td>
                         <td className="attendance-td">
-                          {record.clockOut ? (
+                          {isRecordHoliday ? (
+                            <span className="attendance-status-badge" style={{ background: 'white', color: 'black' }}>
+                              Company Holiday ({isRecordHoliday})
+                            </span>
+                          ) : record.status && record.status !== 'Present' ? (
+                            <span className="attendance-status-badge" style={{ background: 'white', color: '#d97706' }}>
+                              {record.status}
+                            </span>
+                          ) : record.clockOut ? (
                             record.totalHours >= 7.5 ? (
                               <span className="attendance-status-badge" style={{ background: 'white', color: '#166534' }}>
                                 Full Day
@@ -292,9 +348,13 @@ export default function Attendance({ user }) {
                                 Incomplete ({record.totalHours} ‹ 7.5h)
                               </span>
                             )
-                          ) : (
+                          ) : record.clockIn ? (
                             <span className="attendance-status-badge" style={{ background: 'white', color: '#3730a3' }}>
                               In Progress
+                            </span>
+                          ) : (
+                            <span className="attendance-status-badge" style={{ background: 'white', color: '#6b7280' }}>
+                              {record.status || 'Absent'}
                             </span>
                           )}
                         </td>
@@ -309,6 +369,25 @@ export default function Attendance({ user }) {
 
       </main>
       <ChatPanel user={user} />
+
+      {/* Holiday Modal */}
+      {showHolidayModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)' }}>
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '12px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#111827' }}>Company Holiday</h3>
+            <p style={{ color: '#4b5563', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              Today is <strong>{holidayName}</strong>, You are not required to mark attendance or submit tasks today. Enjoy your day off!
+            </p>
+            <button
+              onClick={() => setShowHolidayModal(false)}
+              style={{ background: '#3b82f6', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600' }}
+            >
+              Got it, Thanks!
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

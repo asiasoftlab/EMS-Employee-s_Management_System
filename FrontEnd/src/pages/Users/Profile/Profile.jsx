@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from '../../../components/UserLayout/LayoutComponents';
 import axios from '../../../config/axiosConfig';
 import { toast } from 'react-toastify';
@@ -9,6 +9,7 @@ import './Profile.css';
 export default function Profile({ user }) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [profileData, setProfileData] = useState(user);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -19,6 +20,27 @@ export default function Profile({ user }) {
     bloodGroup: user?.bloodGroup || '',
   });
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data } = await axios.get('/api/auth/me');
+        setProfileData(data);
+        setFormData({
+          name: data?.name || '',
+          phone: data?.phone || '',
+          emergencyContact: data?.emergencyContact || '',
+          gender: data?.gender || '',
+          dob: data?.dob || '',
+          address: data?.address || '',
+          bloodGroup: data?.bloodGroup || '',
+        });
+      } catch (error) {
+        console.error("Failed to fetch fresh profile data", error);
+      }
+    };
+    fetchProfile();
+  }, []);
+
   if (!user) return null;
 
   const handleSave = async () => {
@@ -27,8 +49,19 @@ export default function Profile({ user }) {
       await axios.put('/api/auth/profile', formData);
       toast.success('Profile updated successfully!');
       setIsEditing(false);
-      // Reload to fetch fresh user data in parent component
-      window.location.reload();
+      
+      // Re-fetch data locally instead of reloading the whole page
+      const { data } = await axios.get('/api/auth/me');
+      setProfileData(data);
+      setFormData({
+        name: data?.name || '',
+        phone: data?.phone || '',
+        emergencyContact: data?.emergencyContact || '',
+        gender: data?.gender || '',
+        dob: data?.dob || '',
+        address: data?.address || '',
+        bloodGroup: data?.bloodGroup || '',
+      });
     } catch (error) {
       console.error(error);
       toast.error("We couldn't update your profile right now. Please try again.");
@@ -85,7 +118,7 @@ export default function Profile({ user }) {
         <div className="tasks-container p-4 sm:p-8 relative">
           <div className="profile-info-section">
             <div className="profile-avatar shadow-sm">
-              {(formData.name || user?.name || 'U').charAt(0).toUpperCase()}
+              {(formData.name || profileData?.name || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 w-full max-w-md">
               {isEditing ? (
@@ -97,19 +130,19 @@ export default function Profile({ user }) {
                   placeholder="Enter full name"
                 />
               ) : (
-                <h2 className="text-xl font-semibold">{user?.name || 'User'}</h2>
+                <h2 className="text-xl font-semibold">{profileData?.name || 'User'}</h2>
               )}
-              <p style={{ color: 'var(--text-secondary)' }}>{user?.email || 'N/A'}</p>
+              <p style={{ color: 'var(--text-secondary)' }}>{profileData?.email || 'N/A'}</p>
             </div>
           </div>
           <div className="profile-details-grid">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Role</label>
-              <div className="profile-field-value">{user?.role || 'Employee'}</div>
+              <div className="profile-field-value">{profileData?.role || 'Employee'}</div>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Department</label>
-              <div className="profile-field-value">{user?.department || 'Not Assigned'}</div>
+              <div className="profile-field-value">{profileData?.department || 'Not Assigned'}</div>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Phone</label>
@@ -122,7 +155,7 @@ export default function Profile({ user }) {
                   placeholder="Enter phone number"
                 />
               ) : (
-                <div className="profile-field-value">{user?.phone || 'Not Assigned'}</div>
+                <div className="profile-field-value">{profileData?.phone || 'Not Assigned'}</div>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
@@ -136,7 +169,7 @@ export default function Profile({ user }) {
                   placeholder="Enter emergency number"
                 />
               ) : (
-                <div className="profile-field-value">{user?.emergencyContact || 'Not Assigned'}</div>
+                <div className="profile-field-value">{profileData?.emergencyContact || 'Not Assigned'}</div>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
@@ -152,7 +185,7 @@ export default function Profile({ user }) {
                   <option value="Female">Female</option>
                 </select>
               ) : (
-                <div className="profile-field-value">{user?.gender || 'Not Assigned'}</div>
+                <div className="profile-field-value">{profileData?.gender || 'Not Assigned'}</div>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
@@ -165,7 +198,7 @@ export default function Profile({ user }) {
                   className="profile-input"
                 />
               ) : (
-                <div className="profile-field-value">{user?.dob || 'Not Assigned'}</div>
+                <div className="profile-field-value">{profileData?.dob || 'Not Assigned'}</div>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
@@ -187,7 +220,7 @@ export default function Profile({ user }) {
                   <option value="AB-">AB-</option>
                 </select>
               ) : (
-                <div className="profile-field-value">{user?.bloodGroup || 'Not Assigned'}</div>
+                <div className="profile-field-value">{profileData?.bloodGroup || 'Not Assigned'}</div>
               )}
             </div>
             <div className="flex flex-col gap-1.5 sm:col-span-2">
@@ -200,7 +233,7 @@ export default function Profile({ user }) {
                   placeholder="Enter full address"
                 />
               ) : (
-                <div className="profile-field-value !items-start min-h-[100px]">{user?.address || 'Not Assigned'}</div>
+                <div className="profile-field-value !items-start min-h-[100px]">{profileData?.address || 'Not Assigned'}</div>
               )}
             </div>
           </div>
