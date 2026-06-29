@@ -13,7 +13,7 @@ export default function Attendance({ user }) {
   const [actionLoading, setActionLoading] = useState(false);
   const [todayRecord, setTodayRecord] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+
   const todayDateObj = new Date();
   const monthStr = String(todayDateObj.getMonth() + 1).padStart(2, '0');
   const dayStr = String(todayDateObj.getDate()).padStart(2, '0');
@@ -31,13 +31,8 @@ export default function Attendance({ user }) {
   const getLiveDuration = (clockIn) => {
     if (!clockIn) return '0h 0m 0s';
     const clockInDate = new Date(clockIn);
-    const sixPM = new Date(clockInDate);
-    sixPM.setHours(18, 0, 0, 0);
-    
-    let endTime = currentTime;
-    if (endTime > sixPM) endTime = sixPM;
-    
-    const diffMs = Math.max(0, endTime - clockInDate);
+
+    const diffMs = Math.max(0, currentTime - clockInDate);
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
@@ -47,13 +42,8 @@ export default function Attendance({ user }) {
   const getLiveOvertime = (clockIn) => {
     if (!clockIn) return '0h 0m 0s';
     const clockInDate = new Date(clockIn);
-    const sixPM = new Date(clockInDate);
-    sixPM.setHours(18, 0, 0, 0);
 
-    let endTime = currentTime;
-    if (endTime > sixPM) endTime = sixPM;
-
-    const diffMs = Math.max(0, endTime - clockInDate);
+    const diffMs = Math.max(0, currentTime - clockInDate);
     const hours = diffMs / (1000 * 60 * 60);
     if (hours > 7.5) {
       const overtimeMs = diffMs - (7.5 * 60 * 60 * 1000);
@@ -131,16 +121,11 @@ export default function Attendance({ user }) {
   const isClockedOut = todayRecord?.clockOut != null;
 
   const totalOvertime = records.reduce((acc, curr) => {
-    let overtime = parseFloat(curr.overtime) || (curr.totalHours && curr.totalHours > 7.5 ? curr.totalHours - 7.5 : 0);
+    let overtime = curr.overtime != null ? parseFloat(curr.overtime) : (curr.totalHours && curr.totalHours > 7.5 ? curr.totalHours - 7.5 : 0);
     if (!curr.clockOut && curr.clockIn) {
       const clockInDate = new Date(curr.clockIn);
-      const sixPM = new Date(clockInDate);
-      sixPM.setHours(18, 0, 0, 0);
-      
-      let endTime = currentTime;
-      if (endTime > sixPM) endTime = sixPM;
-      
-      const diffMs = Math.max(0, endTime - clockInDate);
+
+      const diffMs = Math.max(0, currentTime - clockInDate);
       const hours = diffMs / (1000 * 60 * 60);
       if (hours > 7.5) {
         overtime += (hours - 7.5);
@@ -181,7 +166,7 @@ export default function Attendance({ user }) {
               <div style={{ marginBottom: '1.5rem' }}>
                 <p className="attendance-action-text">Today is a Company Holiday: <strong>{holidayName}</strong></p>
                 <div className="attendance-badge-completed" style={{ background: '#ecfdf5', color: '#065f46', borderColor: '#34d399', marginBottom: '1rem' }}>
-                 Enjoy your day off!
+                  Enjoy your day off!
                 </div>
                 <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>Working anyway? You can still clock in below.</p>
               </div>
@@ -206,7 +191,7 @@ export default function Attendance({ user }) {
                   disabled={actionLoading}
                   className="attendance-btn-clock-in"
                 >
-                  <LogIn size={18} /> {actionLoading ? 'Processing...' : 'Clock In Now'}
+                  <LogIn size={18} /> {actionLoading ? 'Processing...' : 'Check In Now'}
                 </button>
               </>
             )}
@@ -222,7 +207,7 @@ export default function Attendance({ user }) {
                   disabled={actionLoading}
                   className="attendance-btn-clock-out"
                 >
-                  <LogOut size={18} /> {actionLoading ? 'Processing...' : 'Clock Out'}
+                  <LogOut size={18} /> {actionLoading ? 'Processing...' : 'Check Out'}
                 </button>
               </>
             )}
@@ -249,7 +234,7 @@ export default function Attendance({ user }) {
                     if (!r.date) return false;
                     const d = new Date(r.date);
                     const now = new Date();
-                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && (r.totalHours > 0 || r.clockIn || r.status === 'Present');
                   }).length}/{new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()} ({new Date().toLocaleString('default', { month: 'short' })})
                 </div>
               </div>
@@ -303,64 +288,88 @@ export default function Attendance({ user }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...records].sort((a, b) => new Date(b.date) - new Date(a.date)).map(record => {
-                    const rowDate = new Date(record.date);
-                    const rowMonth = String(rowDate.getMonth() + 1).padStart(2, '0');
-                    const rowDay = String(rowDate.getDate()).padStart(2, '0');
-                    const rowKey = `${rowMonth}-${rowDay}`;
-                    const isRecordHoliday = companyHolidays[rowKey];
-                    const rowOvertime = parseFloat(record.overtime) || (record.totalHours && record.totalHours > 7.5 ? record.totalHours - 7.5 : 0);
-                    return (
-                      <tr key={record._id} className="attendance-tr">
-                        <td className="attendance-td-date">{formatDate(record.date)}</td>
-                        <td className="attendance-td">{formatTime(record.clockIn)}</td>
-                        <td className="attendance-td">{formatTime(record.clockOut)}</td>
-                        <td className="attendance-td-hours">
-                          {record.totalHours
-                            ? `${record.totalHours} hrs`
-                            : (record.clockIn && !record.clockOut
-                              ? <span>{getLiveDuration(record.clockIn)}</span>
-                              : '-')}
-                        </td>
-                        <td className="attendance-td-hours">
-                          {record.clockOut
-                            ? (rowOvertime > 0 ? `${rowOvertime.toFixed(1)} hrs` : '0 hrs')
-                            : (record.clockIn
-                              ? <span>{getLiveOvertime(record.clockIn)}</span>
-                              : '0 hrs')}
-                        </td>
-                        <td className="attendance-td">
-                          {isRecordHoliday ? (
-                            <span className="attendance-status-badge" style={{ background: 'white', color: 'black' }}>
-                              Company Holiday ({isRecordHoliday})
-                            </span>
-                          ) : record.status && record.status !== 'Present' ? (
-                            <span className="attendance-status-badge" style={{ background: 'white', color: '#d97706' }}>
-                              {record.status}
-                            </span>
-                          ) : record.clockOut ? (
-                            record.totalHours >= 7.5 ? (
-                              <span className="attendance-status-badge" style={{ background: 'white', color: '#166534' }}>
-                                Full Day
+                  {(() => {
+                    const allRecords = [...records];
+                    const existingDates = new Set(allRecords.map(r => r.date));
+                    const todayObj = new Date();
+                    for (let d = 1; d <= todayObj.getDate(); d++) {
+                      const tempDate = new Date(todayObj.getFullYear(), todayObj.getMonth(), d);
+                      if (tempDate.getDay() === 0) {
+                        const dateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(tempDate);
+                        if (!existingDates.has(dateStr)) {
+                          allRecords.push({
+                            _id: `sunday-${dateStr}`,
+                            date: dateStr,
+                            status: 'Holiday',
+                            totalHours: 0
+                          });
+                        }
+                      }
+                    }
+                    return allRecords.sort((a, b) => new Date(b.date) - new Date(a.date)).map(record => {
+                      const rowDate = new Date(record.date);
+                      const rowMonth = String(rowDate.getMonth() + 1).padStart(2, '0');
+                      const rowDay = String(rowDate.getDate()).padStart(2, '0');
+                      const rowKey = `${rowMonth}-${rowDay}`;
+                      const isRecordHoliday = companyHolidays[rowKey];
+                      const isSunday = rowDate.getDay() === 0;
+                      const rowOvertime = record.overtime != null ? parseFloat(record.overtime) : (record.totalHours && record.totalHours > 7.5 ? record.totalHours - 7.5 : 0);
+                      return (
+                        <tr key={record._id} className="attendance-tr">
+                          <td className="attendance-td-date">{formatDate(record.date)}</td>
+                          <td className="attendance-td">{formatTime(record.clockIn)}</td>
+                          <td className="attendance-td">{formatTime(record.clockOut)}</td>
+                          <td className="attendance-td-hours">
+                            {record.totalHours
+                              ? `${record.totalHours} hrs`
+                              : (record.clockIn && !record.clockOut
+                                ? <span>{getLiveDuration(record.clockIn)}</span>
+                                : '-')}
+                          </td>
+                          <td className="attendance-td-hours">
+                            {record.clockOut
+                              ? (rowOvertime > 0 ? `${rowOvertime.toFixed(1)} hrs` : '0 hrs')
+                              : (record.clockIn
+                                ? <span>{getLiveOvertime(record.clockIn)}</span>
+                                : '0 hrs')}
+                          </td>
+                          <td className="attendance-td">
+                            {isSunday && !record.clockIn ? (
+                              <span className="attendance-status-badge" style={{ background: 'white', color: 'black' }}>
+                                Holiday
+                              </span>
+                            ) : isRecordHoliday && !record.clockIn ? (
+                              <span className="attendance-status-badge" style={{ background: 'white', color: 'black' }}>
+                                Company Holiday ({isRecordHoliday})
+                              </span>
+                            ) : record.status && record.status !== 'Present' ? (
+                              <span className="attendance-status-badge" style={{ background: 'white', color: '#d97706' }}>
+                                {record.status}
+                              </span>
+                            ) : record.clockOut ? (
+                              record.totalHours >= 7.5 ? (
+                                <span className="attendance-status-badge" style={{ background: 'white', color: '#166534' }}>
+                                  Full Day
+                                </span>
+                              ) : (
+                                <span className="attendance-status-badge" style={{ background: 'white', color: '#991b1b' }}>
+                                  Incomplete ({record.totalHours} ‹ 7.5h)
+                                </span>
+                              )
+                            ) : record.clockIn ? (
+                              <span className="attendance-status-badge" style={{ background: 'white', color: '#3730a3' }}>
+                                In Progress
                               </span>
                             ) : (
-                              <span className="attendance-status-badge" style={{ background: 'white', color: '#991b1b' }}>
-                                Incomplete ({record.totalHours} ‹ 7.5h)
+                              <span className="attendance-status-badge" style={{ background: 'white', color: '#6b7280' }}>
+                                {record.status || 'Absent'}
                               </span>
-                            )
-                          ) : record.clockIn ? (
-                            <span className="attendance-status-badge" style={{ background: 'white', color: '#3730a3' }}>
-                              In Progress
-                            </span>
-                          ) : (
-                            <span className="attendance-status-badge" style={{ background: 'white', color: '#6b7280' }}>
-                              {record.status || 'Absent'}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  })()}
                 </tbody>
               </table>
             </div>

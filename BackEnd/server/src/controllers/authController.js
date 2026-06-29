@@ -132,6 +132,8 @@ export const getMe = asyncHandler(async (req, res) => {
     dob: req.user.dob,
     address: req.user.address,
     bloodGroup: req.user.bloodGroup,
+    profilePic: req.user.profilePic,
+    profilePicUpdateDates: req.user.profilePicUpdateDates || [],
   };
   res.status(200).json(user);
 });
@@ -149,9 +151,9 @@ export const updateProfile = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 
-  const { name, phone, emergencyContact, gender, dob, address, bloodGroup } = req.body;
+  const { name, phone, emergencyContact, gender, dob, address, bloodGroup, profilePic } = req.body;
   
-  await userRef.update({
+  const updateData = {
     name: name || docSnap.data().name || '',
     phone: phone || docSnap.data().phone || '',
     emergencyContact: emergencyContact || docSnap.data().emergencyContact || '',
@@ -159,7 +161,26 @@ export const updateProfile = asyncHandler(async (req, res) => {
     dob: dob || docSnap.data().dob || '',
     address: address || docSnap.data().address || '',
     bloodGroup: bloodGroup || docSnap.data().bloodGroup || '',
-  });
+  };
+
+  if (profilePic !== undefined) {
+    const existingPic = docSnap.data().profilePic;
+    if (profilePic !== existingPic) {
+      const updates = docSnap.data().profilePicUpdateDates || [];
+      const currentYear = new Date().getFullYear();
+      const updatesThisYear = updates.filter(date => new Date(date).getFullYear() === currentYear);
+      
+      if (updatesThisYear.length >= 3) {
+        res.status(400);
+        throw new Error('You can only change your profile picture 3 times a year.');
+      }
+      
+      updateData.profilePicUpdateDates = [...updates, new Date().toISOString()];
+    }
+    updateData.profilePic = profilePic;
+  }
+
+  await userRef.update(updateData);
 
   const updatedDoc = await userRef.get();
   const updatedUser = {
@@ -174,6 +195,8 @@ export const updateProfile = asyncHandler(async (req, res) => {
     dob: updatedDoc.data().dob,
     address: updatedDoc.data().address,
     bloodGroup: updatedDoc.data().bloodGroup,
+    profilePic: updatedDoc.data().profilePic,
+    profilePicUpdateDates: updatedDoc.data().profilePicUpdateDates || [],
   };
 
   res.status(200).json(updatedUser);

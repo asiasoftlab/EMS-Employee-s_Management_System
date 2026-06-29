@@ -31,10 +31,10 @@ export const getAttendance = asyncHandler(async (req, res) => {
         const clockOutTime = sixPM.toISOString();
         const diffMs = sixPM - clockInTime;
         const totalHours = (diffMs / (1000 * 60 * 60)).toFixed(2);
-        
+
         record.clockOut = clockOutTime;
         record.totalHours = parseFloat(totalHours);
-        
+
         const updatePromise = db.collection('attendance').doc(doc.id).update({
           clockOut: clockOutTime,
           totalHours: parseFloat(totalHours),
