@@ -72,6 +72,9 @@ export default function AdminDashboard({ user }) {
   const [selectedEmp, setSelectedEmp] = useState(null);
   const [empTasks, setEmpTasks] = useState([]);
   const [empTasksLoading, setEmpTasksLoading] = useState(false);
+  const [empAttendance, setEmpAttendance] = useState([]);
+  const [empAttendanceLoading, setEmpAttendanceLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('tasks');
   const [allTasks, setAllTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [showChatModal, setShowChatModal] = useState(false);
@@ -192,6 +195,28 @@ export default function AdminDashboard({ user }) {
     setShowDownloadMenu(false);
   };
 
+
+  const exportAttendancePDF = () => {
+    if (!selectedEmp) return toast.warning('Please select an employee first');
+    if (!empAttendance || empAttendance.length === 0) return toast.warning('No attendance records to export');
+    const doc = new jsPDF();
+    doc.text(`${selectedEmp.name} - Attendance`, 14, 15);
+    const tableData = empAttendance.map(record => [
+      formatDate(record.date),
+      formatTs(record.clockIn).split(', ')[1] || formatTs(record.clockIn) || '—',
+      formatTs(record.clockOut).split(', ')[1] || formatTs(record.clockOut) || (record.clockIn ? 'Working...' : '—'),
+      (record.totalHours || 0).toFixed(2) + 'h',
+      record.status || 'Present'
+    ]);
+    autoTable(doc, {
+      head: [['Date', 'Check In', 'Check Out', 'Total Hrs', 'Status']],
+      body: tableData,
+      startY: 20
+    });
+    doc.save(`${selectedEmp.name.replace(/\s+/g, '_')}_attendance.pdf`);
+    setShowDownloadMenu(false);
+  };
+
   const exportAllDataExcel = () => {
     const workbook = XLSX.utils.book_new();
 
@@ -302,18 +327,26 @@ export default function AdminDashboard({ user }) {
     }
   };
 
-  const fetchEmpTasks = useCallback(async (emp) => {
+  const fetchEmpData = useCallback(async (emp) => {
     setSelectedEmp(emp);
     setEmpTasks([]);
+    setEmpAttendance([]);
     setEmpTasksLoading(true);
+    setEmpAttendanceLoading(true);
     try {
-      const res = await axios.get(`/api/manager/employee/${emp._id}/tasks`);
-      setEmpTasks(res.data || []);
+      const [tasksRes, attRes] = await Promise.all([
+        axios.get(`/api/manager/employee/${emp._id}/tasks`),
+        axios.get(`/api/manager/employee/${emp._id}/attendance`)
+      ]);
+      setEmpTasks(tasksRes.data || []);
+      setEmpAttendance(attRes.data || []);
     } catch (err) {
-      console.error('Error fetching employee tasks:', err);
+      console.error('Error fetching employee data:', err);
       setEmpTasks([]);
+      setEmpAttendance([]);
     } finally {
       setEmpTasksLoading(false);
+      setEmpAttendanceLoading(false);
     }
   }, []);
 
@@ -329,7 +362,7 @@ export default function AdminDashboard({ user }) {
     const handleTaskUpdated = () => {
       fetchAllTasksSummary();
       if (selectedEmp) {
-        fetchEmpTasks(selectedEmp);
+        fetchEmpData(selectedEmp);
       }
     };
 
@@ -339,7 +372,7 @@ export default function AdminDashboard({ user }) {
       socket.off('task_updated', handleTaskUpdated);
       socket.disconnect(); // Disconnect only when the entire dashboard unmounts
     };
-  }, [selectedEmp, fetchEmpTasks]); // Re-bind when selectedEmp changes so fetchEmpTasks uses the right emp
+  }, [selectedEmp, fetchEmpData]); // Re-bind when selectedEmp changes so fetchEmpData uses the right emp
 
   // Subscribe to chat messages for selected employee
   useEffect(() => {
@@ -492,10 +525,7 @@ export default function AdminDashboard({ user }) {
     }
     groupedChatMessages.push({ type: 'msg', msg });
   });
-
   const statusClass = { Pending: 'status-pending', 'In Progress': 'status-inprogress', Completed: 'status-completed' };
-  const priorityClass = { High: 'priority-high', Medium: 'priority-medium', Low: 'priority-low' };
-
   if (!user || (user.role !== 'admin' && user.role !== 'manager')) return null;
 
   return (
@@ -531,6 +561,13 @@ export default function AdminDashboard({ user }) {
           </div>
         </div>
 
+        <div className="status-legend" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', padding: '10px 1.5rem', borderBottom: '1px solid var(--border-light)', fontSize: '11px', color: 'var(--text-gray)', background: '#f8fafc', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} title="Logged in and active"><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></span> Online</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} title="Inactive for 15+ mins"><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }}></span> Away</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} title="Offline or logged out"><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#94a3b8' }}></span> Offline</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} title="On approved leave"><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }}></span> On Leave</div>
+        </div>
+
         <div className="presence-lists-scrollable">
           {loading ? (
             <div className="pane-loader">
@@ -554,7 +591,7 @@ export default function AdminDashboard({ user }) {
                   <div
                     key={emp._id}
                     className={`emp-card ${isSelected ? 'emp-card--selected' : ''} emp-card--${statusClass}`}
-                    onClick={() => { fetchEmpTasks(emp); setShowMobileSidebar(false); }}
+                    onClick={() => { fetchEmpData(emp); setShowMobileSidebar(false); setActiveTab('tasks'); }}
                     title={`Status: ${status}`}
                   >
                     <div className="emp-card-top">
@@ -603,7 +640,7 @@ export default function AdminDashboard({ user }) {
             <button className="mobile-menu-toggle mr-2 block lg:hidden" onClick={() => setShowMobileSidebar(!showMobileSidebar)}>
               <AlignLeft size={20} />
             </button>
-            
+
             <div style={{
               width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--primary)',
               color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -735,8 +772,12 @@ export default function AdminDashboard({ user }) {
             {/* Tasks Section Header */}
             <div className="tasks-section-header">
               <div className="tasks-section-title">
-                <div className={`tasks-header-avatar ${selectedEmp.isOnline ? 'avatar-present' : 'avatar-absent'}`}>
-                  {getInitials(selectedEmp.name)}
+                <div className={`tasks-header-avatar ${selectedEmp.isOnline ? 'avatar-present' : 'avatar-absent'}`} style={{ overflow: 'hidden' }}>
+                  {selectedEmp.profilePic ? (
+                    <img src={selectedEmp.profilePic} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    getInitials(selectedEmp.name)
+                  )}
                 </div>
                 <div>
                   <h2>{selectedEmp.name}</h2>
@@ -751,83 +792,214 @@ export default function AdminDashboard({ user }) {
                   <MessageSquare size={14} className="inline-icon" />
                   Chat
                 </button>
-                <button className="tasks-close-btn" onClick={() => { setSelectedEmp(null); setEmpTasks([]); }} title="Close">
+                <button className="tasks-close-btn" onClick={() => { setSelectedEmp(null); setEmpTasks([]); setEmpAttendance([]); }} title="Close">
                   <X size={16} />
                 </button>
               </div>
             </div>
 
+            {/* Tabs */}
+            <div className="emp-tabs" style={{ display: 'flex', gap: '1.5rem', padding: '0 1.5rem', borderBottom: '1px solid var(--border-color)', backgroundColor: '#f8fafc' }}>
+              <button
+                className={`emp-tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
+                onClick={() => setActiveTab('tasks')}
+                style={{ padding: '0.75rem 0', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'tasks' ? '2px solid var(--primary)' : '2px solid transparent', color: activeTab === 'tasks' ? 'var(--primary)' : 'var(--text-secondary)', fontWeight: activeTab === 'tasks' ? '600' : '500' }}
+              >
+                Tasks ({empTasks.length})
+              </button>
+              <button
+                className={`emp-tab-btn ${activeTab === 'attendance' ? 'active' : ''}`}
+                onClick={() => setActiveTab('attendance')}
+                style={{ padding: '0.75rem 0', border: 'none', background: 'none', cursor: 'pointer', borderBottom: activeTab === 'attendance' ? '2px solid var(--primary)' : '2px solid transparent', color: activeTab === 'attendance' ? 'var(--primary)' : 'var(--text-secondary)', fontWeight: activeTab === 'attendance' ? '600' : '500' }}
+              >
+                Attendance Records ({empAttendance.length})
+              </button>
+              {activeTab === 'attendance' && (
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', position: 'relative' }}>
+                  <button
+                    onClick={() => {
+                      // We can use a simple prompt or just create a mini dropdown here, 
+                      // but since we have two formats (Excel and PDF), we can provide a small dropdown
+                      const menu = document.getElementById('attendance-download-menu');
+                      if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', color: '#334155', cursor: 'pointer', fontWeight: '500' }}
+                  >
+                    <Download size={14} /> Download
+                  </button>
+                  <div id="attendance-download-menu" style={{ display: 'none', position: 'absolute', top: '100%', right: 0, marginTop: '4px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 10, minWidth: '150px', overflow: 'hidden' }}>
+                    <button
+                      onClick={(e) => { e.target.parentElement.style.display = 'none'; exportAttendancePDF(); }}
+                      style={{ width: '100%', textAlign: 'left', padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onMouseOver={(e) => e.target.style.background = '#f8fafc'}
+                      onMouseOut={(e) => e.target.style.background = 'transparent'}
+                    >
+                      <FileText size={12} color="#ef4444" /> PDF Format
+                    </button>
+                  </div>
+                </div>
+              )}
+              {activeTab === 'tasks' && (
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', position: 'relative' }}>
+                  <button
+                    onClick={() => {
+                      const menu = document.getElementById('tasks-download-menu');
+                      if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', color: '#334155', cursor: 'pointer', fontWeight: '500' }}
+                  >
+                    <Download size={14} /> Download
+                  </button>
+                  <div id="tasks-download-menu" style={{ display: 'none', position: 'absolute', top: '100%', right: 0, marginTop: '4px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 10, minWidth: '150px', overflow: 'hidden' }}>
+
+                    <button
+                      onClick={(e) => { e.target.parentElement.style.display = 'none'; exportTasksPDF(); }}
+                      style={{ width: '100%', textAlign: 'left', padding: '8px 12px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onMouseOver={(e) => e.target.style.background = '#f8fafc'}
+                      onMouseOut={(e) => e.target.style.background = 'transparent'}
+                    >
+                      <FileText size={12} color="#ef4444" /> PDF Format
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Tasks Body */}
-            {empTasksLoading ? (
-              <div className="tasks-loader">
-                <RefreshCw className="spinner-icon animate-spin" size={22} />
-                <p>Loading tasks…</p>
-              </div>
-            ) : empTasks.length === 0 ? (
-              <div className="tasks-empty">
-                <AlertCircle size={32} className="tasks-empty-icon" />
-                <p>No tasks submitted by this employee yet.</p>
-              </div>
-            ) : (
-              <div className="tasks-table-wrapper">
-                <table className="tasks-table">
-                  <thead>
-                    <tr>
-                      <th>Task Title</th>
-                      <th>Description</th>
-                      <th>Location</th>
-                      <th>Status</th>
-                      <th>Total Working Hrs</th>
-                      <th>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {empTasks.map((task, index) => {
-                      // title fallback: if stored title is a plain date string, show description instead
-                      const displayTitle = task.title && !/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)/.test(task.title)
-                        ? task.title
-                        : (task.description || task.notes || task.title || '—');
-                      return (
-                        <tr key={task._id} className="tasks-row tasks-row--clickable" onClick={() => setSelectedTask(task)}>
-                          <td className="task-title-cell">{displayTitle}</td>
-                          <td className="task-desc-cell">{task.description || task.notes || '—'}</td>
-                          <td className="task-location-cell">
-                            {task.location ? (
-                              <span className="task-location-tag">
-                                <MapPin size={11} />
-                                {task.location}
+            {activeTab === 'tasks' && (
+              empTasksLoading ? (
+                <div className="tasks-loader">
+                  <RefreshCw className="spinner-icon animate-spin" size={22} />
+                  <p>Loading tasks…</p>
+                </div>
+              ) : empTasks.length === 0 ? (
+                <div className="tasks-empty">
+                  <AlertCircle size={32} className="tasks-empty-icon" />
+                  <p>No tasks submitted by this employee yet.</p>
+                </div>
+              ) : (
+                <div className="tasks-table-wrapper">
+                  <table className="tasks-table">
+                    <thead>
+                      <tr>
+                        <th>Task Title</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Total Working Hrs</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {empTasks.map((task, index) => {
+                        // title fallback: if stored title is a plain date string, show description instead
+                        const displayTitle = task.title && !/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)/.test(task.title)
+                          ? task.title
+                          : (task.description || task.notes || task.title || '—');
+                        return (
+                          <tr key={task._id} className="tasks-row tasks-row--clickable" onClick={() => setSelectedTask(task)}>
+                            <td className="task-title-cell">{displayTitle}</td>
+                            <td className="task-desc-cell">{task.description || task.notes || '—'}</td>
+                            <td className="task-location-cell">
+                              {task.location ? (
+                                <span className="task-location-tag">
+                                  <MapPin size={11} />
+                                  {task.location}
+                                </span>
+                              ) : '—'}
+                            </td>
+                            <td>
+                              <span className={`task-status-badge ${statusClass[task.status] || 'status-pending'}`}>
+                                {task.status}
                               </span>
-                            ) : '—'}
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <LiveWorkingHours
+                                  todayHours={task.todayWorkingHours || 0}
+                                  totalHours={0}
+                                  currentClockIn={task.currentClockIn}
+                                  className="task-working-hours-badge"
+                                />
+                                {index === 0 && <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>Today</span>}
+                              </div>
+                            </td>
+
+                            <td className="task-date-cell">
+                              <Clock size={12} className="inline-icon" />
+                              {formatDate(task.deadline)}
+                            </td>
+
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+
+            {/* Attendance Body */}
+            {activeTab === 'attendance' && (
+              empAttendanceLoading ? (
+                <div className="tasks-loader">
+                  <RefreshCw className="spinner-icon animate-spin" size={22} />
+                  <p>Loading attendance…</p>
+                </div>
+              ) : empAttendance.length === 0 ? (
+                <div className="tasks-empty">
+                  <AlertCircle size={32} className="tasks-empty-icon" />
+                  <p>No attendance records for this employee yet.</p>
+                </div>
+              ) : (
+                <div className="tasks-table-wrapper">
+                  <table className="tasks-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Total Hrs</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {empAttendance.map((record) => (
+                        <tr key={record._id} className="tasks-row">
+                          <td className="task-date-cell" style={{ fontWeight: '600' }}>
+                            <Calendar size={12} className="inline-icon" style={{ marginRight: '4px' }} />
+                            {formatDate(record.date)}
                           </td>
-                          <td>
-                            <span className={`task-status-badge ${statusClass[task.status] || 'status-pending'}`}>
-                              {task.status}
-                            </span>
-                          </td>
+                          <td>{formatTs(record.clockIn).split(', ')[1] || formatTs(record.clockIn) || '—'}</td>
+                          <td>{formatTs(record.clockOut).split(', ')[1] || formatTs(record.clockOut) || (record.clockIn ? 'Working...' : '—')}</td>
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <LiveWorkingHours
-                                todayHours={task.todayWorkingHours || 0}
-                                totalHours={0}
-                                currentClockIn={task.currentClockIn}
-                                className="task-working-hours-badge"
-                              />
-                              {index === 0 && <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b' }}>Today</span>}
+                              {record.clockIn && !record.clockOut ? (
+                                <LiveWorkingHours
+                                  todayHours={record.totalHours || 0}
+                                  totalHours={0}
+                                  currentClockIn={record.clockIn}
+                                  className="task-working-hours-badge"
+                                />
+                              ) : (
+                                <span className="task-working-hours-badge" style={{ background: '#f1f5f9', color: '#475569' }}>
+                                  {(record.totalHours || 0).toFixed(2)}h
+                                </span>
+                              )}
                             </div>
                           </td>
-
-                          <td className="task-date-cell">
-                            <Clock size={12} className="inline-icon" />
-                            {formatDate(task.deadline)}
+                          <td>
+                            <span className={`task-status-badge ${record.status === 'Present' ? 'status-completed' : record.status === 'Holiday' ? 'status-inprogress' : 'status-pending'}`}>
+                              {record.status || 'Present'}
+                            </span>
                           </td>
-
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
             )}
+
           </section>
         )}
       </main>
@@ -976,8 +1148,12 @@ export default function AdminDashboard({ user }) {
           <div className="admin-chat-panel" onClick={e => e.stopPropagation()}>
             {/* Panel Header */}
             <div className="admin-chat-header">
-              <div className="admin-chat-avatar">
-                {getInitials(selectedEmp.name)}
+              <div className="admin-chat-avatar" style={{ overflow: 'hidden', padding: 0 }}>
+                {selectedEmp.profilePic ? (
+                  <img src={selectedEmp.profilePic} alt={selectedEmp.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                ) : (
+                  getInitials(selectedEmp.name)
+                )}
               </div>
               <div className="admin-chat-header-info">
                 <h3>{selectedEmp.name}</h3>

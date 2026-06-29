@@ -226,7 +226,7 @@
 }
 
 .chat-date-separator span {
-  background-color: #ffffff;
+  background-color: var(--panel-bg);
   color: #54656f;
   font-size: 0.7rem;
   padding: 0.3rem 0.8rem;
@@ -265,7 +265,7 @@
 }
 
 .chat-bubble.other {
-  background-color: #ffffff;
+  background-color: var(--panel-bg);
   color: #111b21;
   border-top-left-radius: 0;
 }
@@ -303,7 +303,7 @@
   border: none;
   outline: none;
   font-size: 0.9rem;
-  background: #ffffff;
+  background: var(--panel-bg);
   box-shadow: 0 1px 1px rgba(0,0,0,0.05);
 }
 
@@ -323,7 +323,7 @@
 }
 
 .chat-send-btn:disabled {
-  background: #cbd5e1;
+  background: var(--border-light);
   cursor: not-allowed;
 }
 

@@ -76,11 +76,11 @@
 .profile-input {
   padding: 0.75rem;
   border-radius: 8px;
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-color, var(--border-light));
   width: 100%;
   outline: none;
   font-size: 0.875rem;
-  background: white;
+  background: var(--panel-bg);
   color: var(--text-dark, #1e293b);
   transition: all 0.2s ease;
   appearance: none;

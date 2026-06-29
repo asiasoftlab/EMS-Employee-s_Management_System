@@ -249,3 +249,24 @@ export const getEmployeeTasksById = asyncHandler(async (req, res) => {
 
   res.status(200).json(tasks);
 });
+
+// @desc    Get employee attendance by ID
+// @route   GET /api/manager/employee/:id/attendance
+// @access  Private (Manager only)
+export const getEmployeeAttendanceById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const snapshot = await db.collection('attendance')
+    .where('userId', '==', id)
+    .get();
+
+  const records = [];
+  snapshot.forEach(doc => {
+    records.push({ _id: doc.id, ...doc.data() });
+  });
+
+  // Sort by date descending
+  records.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  res.status(200).json(records);
+});

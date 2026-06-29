@@ -84,7 +84,7 @@ body {
   z-index: 0;
 }
 
-.auth-page-wrapper > * {
+.auth-page-wrapper>* {
   z-index: 1;
 }
 
@@ -112,7 +112,7 @@ body {
 .nextjs-toast {
   background: white !important;
   color: #171717 !important;
-  border-radius: 10px !important; 
+  border-radius: 10px !important;
   border: 1px solid #e5e5e5 !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04) !important;
   min-height: 40px !important;

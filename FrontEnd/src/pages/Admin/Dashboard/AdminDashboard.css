@@ -7,11 +7,11 @@
   --accent-amber: #f59e0b;
   --accent-blue: #3b82f6;
   --accent-violet: #8b5cf6;
-  --text-dark: #0f172a;
-  --text-gray: #475569;
+  --text-dark: var(--text-primary);
+  --text-gray: var(--text-secondary);
   --text-light: #94a3b8;
   --border-light: rgba(226, 232, 240, 0.8);
-  --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --bg-gradient: linear-gradient(135deg, var(--bg-color) 0%, var(--border-light) 100%);
   --card-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 16px -6px rgba(15, 23, 42, 0.05);
   --hover-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
 }
@@ -95,7 +95,7 @@
   width: 100%;
   padding: 0.65rem 0.75rem 0.65rem 2.25rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: white;
+  background: var(--panel-bg);
   border-radius: 10px;
   font-size: 0.875rem;
   color: var(--text-dark);
@@ -241,7 +241,7 @@
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  background: white;
+  background: var(--panel-bg);
   padding: 0.85rem 1rem;
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.03);
@@ -291,7 +291,7 @@
 }
 
 .avatar-absent {
-  background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+  background: linear-gradient(135deg, var(--border-light) 0%, #94a3b8 100%);
 }
 
 .presence-ring-pulsate {
@@ -490,14 +490,14 @@
   height: 38px;
   border-radius: 10px;
   border: 1px solid var(--border-light);
-  background: white;
+  background: var(--panel-bg);
   color: var(--text-gray);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .refresh-btn:hover {
-  background: #f8fafc;
+  background: var(--bg-color);
   color: var(--accent-blue);
   border-color: rgba(59, 130, 246, 0.3);
 }
@@ -630,7 +630,7 @@
    EMPLOYEE TASKS SECTION
    ========================================================================== */
 .tasks-section {
-  background: white;
+  background: var(--panel-bg);
   border-radius: 20px;
   border: 1px solid var(--border-light);
   box-shadow: var(--card-shadow);
@@ -644,7 +644,7 @@
   align-items: center;
   padding: 1.25rem 1.75rem;
   border-bottom: 1px solid var(--border-light);
-  background: #f8fafc;
+  background: var(--bg-color);
 }
 
 .tasks-section-title {
@@ -710,7 +710,7 @@
 }
 
 .tasks-table thead tr {
-  background: #f8fafc;
+  background: var(--bg-color);
 }
 
 .tasks-table th {
@@ -736,7 +736,7 @@
 }
 
 .tasks-row:hover {
-  background: #f8fafc;
+  background: var(--bg-color);
 }
 
 /* Employee cell */
@@ -821,7 +821,7 @@
 
 .status-pending {
   background: rgba(100, 116, 139, 0.08);
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .status-inprogress {
@@ -845,7 +845,7 @@
 }
 
 .emp-card {
-  background: white;
+  background: var(--panel-bg);
   border: 1.5px solid var(--border-light);
   border-radius: 14px;
   padding: 0.9rem 1rem;
@@ -922,7 +922,7 @@
 }
 
 .avatar-offline {
-  background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+  background: linear-gradient(135deg, var(--border-light) 0%, #94a3b8 100%);
 }
 
 .emp-card-status-dot {
@@ -1106,7 +1106,7 @@
   gap: 0.35rem;
   padding: 0 0.85rem;
   height: 32px;
-  background: white;
+  background: var(--panel-bg);
   border: 1px solid var(--border-light);
   border-radius: 8px;
   font-size: 0.75rem;
@@ -1130,7 +1130,7 @@
   height: 32px;
   border-radius: 8px;
   border: 1px solid var(--border-light);
-  background: white;
+  background: var(--panel-bg);
   color: var(--text-gray);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1233,7 +1233,7 @@
 }
 
 .task-modal {
-  background: white;
+  background: var(--panel-bg);
   border-radius: 22px;
   width: 100%;
   max-width: 560px;
@@ -1264,7 +1264,7 @@
   align-items: flex-start;
   padding: 1.5rem 1.75rem 1.1rem;
   border-bottom: 1px solid var(--border-light);
-  background: #f8fafc;
+  background: var(--bg-color);
   gap: 1rem;
 }
 
@@ -1310,7 +1310,7 @@
   height: 34px;
   border-radius: 9px;
   border: 1px solid var(--border-light);
-  background: white;
+  background: var(--panel-bg);
   color: var(--text-gray);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1330,7 +1330,7 @@
   gap: 0.6rem;
   padding: 0.85rem 1.75rem;
   border-bottom: 1px solid var(--border-light);
-  background: white;
+  background: var(--panel-bg);
 }
 
 /* Body */
@@ -1385,7 +1385,7 @@
   color: var(--text-dark);
   line-height: 1.65;
   margin: 0;
-  background: #f8fafc;
+  background: var(--bg-color);
   border: 1px solid var(--border-light);
   border-radius: 10px;
   padding: 0.75rem 1rem;
@@ -1397,7 +1397,7 @@
   color: var(--text-gray);
   line-height: 1.6;
   margin: 0;
-  background: #fffbeb;
+  background: var(--panel-bg);
   border: 1px solid #fde68a;
   border-radius: 10px;
   padding: 0.65rem 0.9rem;
@@ -1409,7 +1409,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  background: #f8fafc;
+  background: var(--bg-color);
   border: 1px solid var(--border-light);
   border-radius: 10px;
   padding: 0.65rem 0.85rem;
@@ -1481,7 +1481,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
-  background: #f8fafc;
+  background: var(--bg-color);
   border: 1px solid var(--border-light);
   border-radius: 12px;
   padding: 1rem 1.1rem;
@@ -1520,7 +1520,7 @@
 .task-modal-footer {
   padding: 1rem 1.75rem;
   border-top: 1px solid var(--border-light);
-  background: #f8fafc;
+  background: var(--bg-color);
   display: flex;
   justify-content: flex-end;
 }
@@ -1606,8 +1606,8 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background: #fff;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border-light);
   flex-shrink: 0;
 }
 
@@ -1633,7 +1633,7 @@
 .admin-chat-header-info h3 {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -1642,7 +1642,7 @@
 
 .admin-chat-header-info p {
   font-size: 0.7rem;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -1653,9 +1653,9 @@
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--border-light);
+  background: var(--panel-bg);
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1707,7 +1707,7 @@
 .admin-chat-empty p {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -1719,7 +1719,7 @@
 }
 
 .admin-chat-date-label span {
-  background-color: #ffffff;
+  background-color: var(--panel-bg);
   color: #54656f;
   font-size: 0.7rem;
   padding: 0.3rem 0.8rem;
@@ -1764,7 +1764,7 @@
 }
 
 .admin-chat-bubble--other {
-  background-color: #ffffff;
+  background-color: var(--panel-bg);
   color: #111b21;
   border-top-left-radius: 0;
 }
@@ -1804,7 +1804,7 @@
   border: none;
   outline: none;
   font-size: 0.9rem;
-  background: #ffffff;
+  background: var(--panel-bg);
   box-shadow: 0 1px 1px rgba(0,0,0,0.05);
   resize: none;
   font-family: inherit;
@@ -1818,7 +1818,7 @@
   height: 40px;
   border-radius: 50%;
   border: none;
-  background: #e2e8f0;
+  background: var(--border-light);
   color: #94a3b8;
   display: flex;
   align-items: center;
@@ -1843,8 +1843,150 @@
   transform: scale(0.95);
 }
 
+@media (max-width: 1200px) {
+  :root {
+    --sidebar-width: 320px;
+  }
+
+  .admin-main-pane {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .admin-dashboard-container {
+    flex-direction: column;
+  }
+
+  .admin-sidebar-pane {
+    width: 100%;
+    height: auto;
+    max-height: 500px;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    z-index: 50;
+  }
+
+  .admin-sidebar-pane.mobile-hidden {
+    display: none;
+  }
+
+  .presence-lists-scrollable {
+    max-height: 350px;
+  }
+
+  .mobile-menu-toggle {
+    display: block !important;
+  }
+
+  .admin-main-pane {
+    padding: 1.5rem;
+  }
+
+  .tasks-header-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (min-width: 993px) {
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+
+  .admin-sidebar-pane.mobile-hidden {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-main-pane {
+    padding: 1rem 0.75rem;
+  }
+
+  .main-pane-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .emp-tabs {
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+    padding: 0 1rem !important;
+  }
+  
+  .emp-tabs button {
+    flex: 1 1 100%;
+    text-align: left;
+  }
+
+  .tasks-section-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .tasks-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .tasks-table-wrapper, 
+  .attendance-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.02);
+  }
+
+  .tasks-table, 
+  .attendance-table {
+    min-width: 700px;
+  }
+}
+
+@media (max-width: 600px) {
+  .task-modal {
+    border-radius: 16px;
+    width: 95%;
+  }
+
+  .task-modal-header,
+  .task-modal-body,
+  .task-modal-footer,
+  .task-modal-badges {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+
+  .task-modal-meta-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .status-legend {
+    justify-content: flex-start !important;
+  }
+}
+
 @media (max-width: 480px) {
   .admin-chat-panel {
     width: 100%;
+  }
+  
+  .search-filter-section {
+    padding: 1rem;
+  }
+  
+  .sidebar-header {
+    padding: 1rem;
   }
 }
