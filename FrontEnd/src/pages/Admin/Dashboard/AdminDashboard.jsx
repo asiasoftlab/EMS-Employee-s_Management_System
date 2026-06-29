@@ -559,8 +559,12 @@ export default function AdminDashboard({ user }) {
                   >
                     <div className="emp-card-top">
                       <div className="emp-card-avatar-wrap">
-                        <div className={`emp-card-avatar avatar-${statusClass}`}>
-                          {getInitials(emp.name)}
+                        <div className={`emp-card-avatar avatar-${statusClass}`} style={{ overflow: 'hidden' }}>
+                          {emp.profilePic ? (
+                            <img src={emp.profilePic} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            getInitials(emp.name)
+                          )}
                         </div>
                         <span className={`emp-card-status-dot dot-${statusClass}`} title={status}></span>
                       </div>
@@ -599,7 +603,18 @@ export default function AdminDashboard({ user }) {
             <button className="mobile-menu-toggle mr-2 block lg:hidden" onClick={() => setShowMobileSidebar(!showMobileSidebar)}>
               <AlignLeft size={20} />
             </button>
-           
+            
+            <div style={{
+              width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--primary)',
+              color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 'bold', overflow: 'hidden', flexShrink: 0
+            }}>
+              {user.profilePic ? (
+                <img src={user.profilePic} alt="Admin Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                (user.name || 'A').charAt(0).toUpperCase()
+              )}
+            </div>
             <div>
               <h3>Asia Softlab Employee's</h3>
               <p>{user.email}</p>

@@ -157,7 +157,7 @@
     flex-direction: column;
     padding: 6px;
     gap: 4px;
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
   }
   
@@ -185,7 +185,7 @@
 @media (max-width: 480px) {
   .nav-item {
     padding: 6px 2px;
-    font-size: 0.55rem;
+    font-size: 0.75rem;
   }
   .nav-item svg {
     width: 20px;

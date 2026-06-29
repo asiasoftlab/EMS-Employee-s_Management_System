@@ -89,6 +89,7 @@ export const loginUser = asyncHandler(async (req, res) => {
       email: userData.email,
       department: userData.department,
       role: userData.role || 'employee',
+      profilePic: userData.profilePic,
       token,
     });
   } else {

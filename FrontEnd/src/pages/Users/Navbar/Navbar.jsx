@@ -23,9 +23,22 @@ export default function Navbar({ user, setUser }) {
       <div className="nav-links">
         {user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-            <div className="user-greeting" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span className="user-name" style={{ fontWeight: '600', color: 'var(--text-primary)', lineHeight: '1.2' }}>"Hello,👋{user.name}"</span>
-              <span className="user-email" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.2' }}>{user.email}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{
+                width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--primary)',
+                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 'bold', fontSize: '1.2rem', overflow: 'hidden'
+              }}>
+                {user.profilePic ? (
+                  <img src={user.profilePic} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  (user.name || 'U').charAt(0).toUpperCase()
+                )}
+              </div>
+              <div className="user-greeting" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <span className="user-name" style={{ fontWeight: '600', color: 'var(--text-primary)', lineHeight: '1.2' }}>Hello, 👋 {user.name}</span>
+                <span className="user-email" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.2' }}>{user.email}</span>
+              </div>
             </div>
 
             <span className="dept-badge">
