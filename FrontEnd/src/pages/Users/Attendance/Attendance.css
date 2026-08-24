@@ -161,7 +161,7 @@
 .attendance-stat-card {
   background: var(--panel-bg);
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1rem;
   border: 1px solid var(--border-color, var(--border-light));
   display: flex;
   flex-direction: column;
@@ -179,7 +179,7 @@
 }
 
 .attendance-stat-value {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #1e293b;
 }

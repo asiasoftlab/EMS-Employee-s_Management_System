@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Sidebar, ChatPanel } from '../../../components/UserLayout/LayoutComponents';
-import { Clock, Calendar, CheckCircle, LogOut, LogIn, Activity, RefreshCw } from 'lucide-react';
+import { Clock, Calendar, CheckCircle, LogOut, LogIn, Home,Activity, RefreshCw } from 'lucide-react';
 import axios from '../../../config/axiosConfig';
 import { toast } from 'react-toastify';
 import '../Tasks/Tasks.css'; // Reusing general layout styles
@@ -9,6 +9,7 @@ import { importantDays, companyHolidays } from '../../../utils/importantDays';
 
 export default function Attendance({ user }) {
   const [records, setRecords] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [todayRecord, setTodayRecord] = useState(null);
@@ -57,11 +58,15 @@ export default function Attendance({ user }) {
   const fetchAttendance = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get('/api/attendance');
-      setRecords(data || []);
+      const [attendanceRes, tasksRes] = await Promise.all([
+        axios.get('/api/attendance'),
+        axios.get('/api/tasks').catch(() => ({ data: [] }))
+      ]);
+      setRecords(attendanceRes.data || []);
+      setTasks(tasksRes.data || []);
 
       const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
-      const foundToday = data.find(r => r.date === today);
+      const foundToday = (attendanceRes.data || []).find(r => r.date === today);
       setTodayRecord(foundToday || null);
     } catch (err) {
       console.error(err);
@@ -120,7 +125,14 @@ export default function Attendance({ user }) {
   const isClockedIn = todayRecord !== null;
   const isClockedOut = todayRecord?.clockOut != null;
 
-  const totalOvertime = records.reduce((acc, curr) => {
+  const currentMonthRecords = records.filter(r => {
+    if (!r.date) return false;
+    const d = new Date(r.date);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+
+  const totalOvertime = currentMonthRecords.reduce((acc, curr) => {
     let overtime = curr.overtime != null ? parseFloat(curr.overtime) : (curr.totalHours && curr.totalHours > 7.5 ? curr.totalHours - 7.5 : 0);
     if (!curr.clockOut && curr.clockIn) {
       const clockInDate = new Date(curr.clockIn);
@@ -133,6 +145,74 @@ export default function Attendance({ user }) {
     }
     return acc + overtime;
   }, 0).toFixed(1);
+
+  const overtimeRecords = currentMonthRecords.filter(curr => {
+    let overtime = curr.overtime != null ? parseFloat(curr.overtime) : (curr.totalHours && curr.totalHours > 7.5 ? curr.totalHours - 7.5 : 0);
+    if (!curr.clockOut && curr.clockIn) {
+      const clockInDate = new Date(curr.clockIn);
+      const diffMs = Math.max(0, currentTime - clockInDate);
+      const hours = diffMs / (1000 * 60 * 60);
+      if (hours > 7.5) {
+        overtime += (hours - 7.5);
+      }
+    }
+    return overtime > 0;
+  });
+
+  const overtimeDatesArray = overtimeRecords.map(r => r.date).sort((a, b) => new Date(a) - new Date(b));
+  const overtimeTooltipText = overtimeDatesArray.length > 0
+    ? "Overtime Dates:\n" + overtimeDatesArray.map(dateStr => new Date(dateStr).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' })).join('\n')
+    : "No overtime days this month";
+
+  const leaveRecords = currentMonthRecords.filter(r => r.status && r.status.includes('Leave') && !r.status.includes('WFH'));
+  const numberOfLeaves = leaveRecords.length;
+  const leaveDatesArray = leaveRecords.map(r => r.date).sort((a, b) => new Date(a) - new Date(b));
+  const leaveTooltipText = leaveDatesArray.length > 0
+    ? "Leave Dates:\n" + leaveDatesArray.map(dateStr => new Date(dateStr).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' })).join('\n')
+    : "No leave days this month";
+
+  const uniqueWFHDates = tasks.filter(t => {
+    if (t.location !== 'Work from home') return false;
+    let deadlineStr = '';
+    if (t.deadline) {
+      if (typeof t.deadline === 'string') deadlineStr = t.deadline.split('T')[0];
+      else if (typeof t.deadline === 'object' && t.deadline._seconds !== undefined) {
+        deadlineStr = new Date(t.deadline._seconds * 1000).toISOString().split('T')[0];
+      } else {
+        try { deadlineStr = new Date(t.deadline).toISOString().split('T')[0]; } catch(e) {}
+      }
+    }
+    if (!deadlineStr) return false;
+    const d = new Date(deadlineStr);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).reduce((uniqueDays, t) => {
+    let deadlineStr = '';
+    if (typeof t.deadline === 'string') deadlineStr = t.deadline.split('T')[0];
+    else if (typeof t.deadline === 'object' && t.deadline._seconds !== undefined) {
+      deadlineStr = new Date(t.deadline._seconds * 1000).toISOString().split('T')[0];
+    } else {
+      deadlineStr = new Date(t.deadline).toISOString().split('T')[0];
+    }
+    uniqueDays.add(deadlineStr);
+    return uniqueDays;
+  }, new Set());
+
+  const numberOfWFH = uniqueWFHDates.size;
+  const wfhDatesArray = Array.from(uniqueWFHDates).sort((a, b) => new Date(a) - new Date(b));
+  const wfhTooltipText = wfhDatesArray.length > 0 
+    ? "WFH Dates:\n" + wfhDatesArray.map(dateStr => new Date(dateStr).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' })).join('\n')
+    : "No WFH days this month";
+  
+  const workedDays = currentMonthRecords.filter(r => r.totalHours > 0 || r.clockIn).length;
+  const avgHours = workedDays > 0 ? (currentMonthRecords.reduce((acc, curr) => acc + (curr.totalHours || 0), 0) / workedDays).toFixed(1) : '0.0';
+  const presentRecords = currentMonthRecords.filter(r => r.totalHours > 0 || r.clockIn || r.status === 'Present');
+  const totalDaysPresent = presentRecords.length;
+
+  const presentDatesArray = presentRecords.map(r => r.date).sort((a, b) => new Date(a) - new Date(b));
+  const presentTooltipText = presentDatesArray.length > 0
+    ? "Present Dates:\n" + presentDatesArray.map(dateStr => new Date(dateStr).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' })).join('\n')
+    : "No present days this month";
 
   return (
     <div className="dashboard-container">
@@ -224,18 +304,14 @@ export default function Attendance({ user }) {
 
           {/* Stats Cards */}
           <div className="attendance-stats-container">
+            <h2 className="attendance-status-heading" style={{ margin: '0 0 0.5rem 0', textAlign: 'left' }}>Monthly Attendance Summary🔻</h2>
             <div className="attendance-stats-row">
-              <div className="attendance-stat-card">
+              <div className="attendance-stat-card" title={presentTooltipText} style={{ cursor: 'pointer' }}>
                 <div className="attendance-stat-title">
                   <Calendar size={16} /> Total Days Present
                 </div>
                 <div className="attendance-stat-value">
-                  {records.filter(r => {
-                    if (!r.date) return false;
-                    const d = new Date(r.date);
-                    const now = new Date();
-                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && (r.totalHours > 0 || r.clockIn || r.status === 'Present');
-                  }).length}/{new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()} ({new Date().toLocaleString('default', { month: 'short' })})
+                  {totalDaysPresent}/{new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()} ({new Date().toLocaleString('default', { month: 'short' })})
                 </div>
               </div>
               <div className="attendance-stat-card">
@@ -243,24 +319,43 @@ export default function Attendance({ user }) {
                   <Activity size={16} /> Avg Hours / Day
                 </div>
                 <div className="attendance-stat-value">
-                  {records.length > 0 ? (records.reduce((acc, curr) => acc + (curr.totalHours || 0), 0) / records.length).toFixed(1) : '0.0'}
+                  {avgHours}
                 </div>
               </div>
             </div>
 
-            <div className="attendance-weekly-card">
-              <div className="attendance-stat-title">
-                <Clock size={16} /> Your Total Overtime (All Time)
-              </div>
-              <div className="attendance-stat-value">
-                {totalOvertime}h
-              </div>
-              {parseFloat(totalOvertime) > 0 && (
-                <div style={{ marginTop: '1rem', padding: '0.875rem', background: '#ecfdf5', border: '1px solid #10b981', borderRadius: '8px', fontSize: '0.875rem', color: '#065f46', lineHeight: '1.5' }}>
-                  🎉 <strong>Congratulations {user?.name || 'User'}!</strong> You have logged <strong>{totalOvertime} hours</strong> of overtime. Special appreciation for your hard work and dedication!
+            <div className="attendance-stats-row" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+              <div className="attendance-stat-card" title={overtimeTooltipText} style={{ cursor: 'pointer' }}>
+                <div className="attendance-stat-title">
+                  <Clock size={16} /> Total Overtime
                 </div>
-              )}
+                <div className="attendance-stat-value">
+                  {totalOvertime}h <span style={{ fontSize: '1rem', color: '#161718ff' }}>({overtimeDatesArray.length} days)</span>
+                </div>
+              </div>
+
+              <div className="attendance-stat-card" title={wfhTooltipText} style={{ cursor: 'pointer' }}>
+                <div className="attendance-stat-title">
+                  <Home size={16} /> Work From Home
+                </div>
+                <div className="attendance-stat-value">
+                  {numberOfWFH}
+                </div>
+              </div>
+              <div className="attendance-stat-card" title={leaveTooltipText} style={{ cursor: 'pointer' }}>
+                <div className="attendance-stat-title">
+                  <Calendar size={16} /> Number of Leaves
+                </div>
+                <div className="attendance-stat-value">
+                  {numberOfLeaves}
+                </div>
+              </div>
             </div>
+            {parseFloat(totalOvertime) > 0 && (
+              <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: '#ecfdf5', border: '1px solid #10b981', borderRadius: '8px', fontSize: '0.875rem', color: '#065f46', lineHeight: '1.5' }}>
+                🎉 <strong>Congratulations {user?.name || 'User'}!</strong> You have logged <strong>{totalOvertime} hours</strong> of overtime. Special appreciation for your hard work and dedication!
+              </div>
+            )}
           </div>
         </section>
 
