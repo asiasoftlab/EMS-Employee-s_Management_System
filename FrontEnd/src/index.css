@@ -27,6 +27,7 @@ html {
   --text-secondary: #475569;
   --border-color: rgba(0, 0, 0, 0.08);
   --glass-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.08);
+  --panel-bg: #ffffff;
 }
 
 * {

@@ -153,7 +153,7 @@
 
 .attendance-stats-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
   flex: 1;
 }
@@ -348,7 +348,20 @@
 
 @media (max-width: 480px) {
   .attendance-stats-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .attendance-stat-card {
+    padding: 0.75rem;
+  }
+
+  .attendance-stat-title {
+    font-size: 0.75rem;
+  }
+
+  .attendance-stat-value {
+    font-size: 1.25rem;
   }
 
   .attendance-action-card {

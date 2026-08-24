@@ -7,7 +7,7 @@ import { getIO } from '../../socket.js';
 // @route   POST /api/tasks
 // @access  Private (Employee/Manager)
 export const createTask = asyncHandler(async (req, res) => {
-  const { title, description, priority, deadline, location } = req.body;
+  const { title, description, priority, deadline, location, subtasks, notes, status } = req.body;
 
   if (!title || !description || !deadline) {
     res.status(400);
@@ -41,9 +41,11 @@ export const createTask = asyncHandler(async (req, res) => {
     title,
     description,
     location: location || '',
-    status: 'Pending',
+    status: status || 'Pending',
     priority: priority || 'Medium',
     deadline: new Date(deadline),
+    notes: notes || '',
+    subtasks: subtasks || [],
     submittedTo: ['manager'],
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),

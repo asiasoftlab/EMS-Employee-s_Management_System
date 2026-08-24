@@ -10,6 +10,7 @@
   --text-dark: var(--text-primary);
   --text-gray: var(--text-secondary);
   --text-light: #94a3b8;
+  --panel-bg: #ffffff;
   --border-light: rgba(226, 232, 240, 0.8);
   --bg-gradient: linear-gradient(135deg, var(--bg-color) 0%, var(--border-light) 100%);
   --card-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 16px -6px rgba(15, 23, 42, 0.05);
@@ -1954,6 +1955,199 @@
   }
 }
 
+
+
+.admin-chat-bubble--other {
+  background-color: var(--panel-bg);
+  color: #111b21;
+  border-top-left-radius: 0;
+}
+
+.admin-chat-bubble p {
+  font-size: 0.85rem;
+  line-height: 1.35;
+  margin: 0 0 2px 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.admin-chat-bubble span {
+  font-size: 0.65rem;
+  color: #667781;
+  align-self: flex-end;
+  margin-top: 2px;
+  text-align: right;
+  opacity: 1;
+}
+
+/* Input bar */
+.admin-chat-input-bar {
+  flex-shrink: 0;
+  padding: 0.8rem 1rem;
+  background-color: #f0f2f5;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  border-top: none;
+}
+
+.admin-chat-input {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border-radius: 24px;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  background: var(--panel-bg);
+  box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+  resize: none;
+  font-family: inherit;
+  line-height: 1.5;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.admin-chat-send-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--border-light);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: not-allowed;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.admin-chat-send-btn--active {
+  background: #00a884;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.admin-chat-send-btn--active:hover {
+  background: #008f6f;
+}
+
+.admin-chat-send-btn--active:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 1200px) {
+  :root {
+    --sidebar-width: 320px;
+  }
+
+  .admin-main-pane {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .admin-dashboard-container {
+    flex-direction: column;
+  }
+
+  .admin-sidebar-pane {
+    width: 100%;
+    height: auto;
+    max-height: 500px;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    z-index: 50;
+  }
+
+  .admin-sidebar-pane.mobile-hidden {
+    display: none;
+  }
+
+  .presence-lists-scrollable {
+    max-height: 350px;
+  }
+
+  .mobile-menu-toggle {
+    display: block !important;
+  }
+
+  .admin-main-pane {
+    padding: 1.5rem;
+  }
+
+  .tasks-header-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (min-width: 993px) {
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+
+  .admin-sidebar-pane.mobile-hidden {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-main-pane {
+    padding: 1rem 0.75rem;
+  }
+
+  .main-pane-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .emp-tabs {
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+    padding: 0 1rem !important;
+  }
+  
+  .emp-tabs button {
+    flex: 1 1 100%;
+    text-align: left;
+  }
+
+  .tasks-section-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .tasks-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .tasks-table-wrapper, 
+  .attendance-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.02);
+  }
+
+  .tasks-table, 
+  .attendance-table {
+    min-width: 700px;
+  }
+}
+
 @media (max-width: 600px) {
   .task-modal {
     border-radius: 16px;
@@ -1989,4 +2183,36 @@
   .sidebar-header {
     padding: 1rem;
   }
+}
+
+.tasks-table-wrapper {
+  overflow-y: auto;
+  overflow-x: auto;
+  max-height: calc(100vh - 350px);
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border-light, #e2e8f0);
+}
+
+.tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tasks-table th {
+  position: sticky;
+  top: 0;
+  background-color: #f8fafc;
+  z-index: 10;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tasks-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
 }

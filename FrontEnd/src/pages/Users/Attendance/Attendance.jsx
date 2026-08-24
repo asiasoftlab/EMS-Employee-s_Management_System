@@ -10,6 +10,7 @@ import { importantDays, companyHolidays } from '../../../utils/importantDays';
 export default function Attendance({ user }) {
   const [records, setRecords] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [todayRecord, setTodayRecord] = useState(null);
@@ -58,12 +59,14 @@ export default function Attendance({ user }) {
   const fetchAttendance = async () => {
     setLoading(true);
     try {
-      const [attendanceRes, tasksRes] = await Promise.all([
+      const [attendanceRes, tasksRes, leavesRes] = await Promise.all([
         axios.get('/api/attendance'),
-        axios.get('/api/tasks').catch(() => ({ data: [] }))
+        axios.get('/api/tasks').catch(() => ({ data: [] })),
+        axios.get('/api/leaves').catch(() => ({ data: [] }))
       ]);
       setRecords(attendanceRes.data || []);
       setTasks(tasksRes.data || []);
+      setLeaves(leavesRes.data || []);
 
       const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
       const foundToday = (attendanceRes.data || []).find(r => r.date === today);
@@ -164,9 +167,24 @@ export default function Attendance({ user }) {
     ? "Overtime Dates:\n" + overtimeDatesArray.map(dateStr => new Date(dateStr).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' })).join('\n')
     : "No overtime days this month";
 
-  const leaveRecords = currentMonthRecords.filter(r => r.status && r.status.includes('Leave') && !r.status.includes('WFH'));
-  const numberOfLeaves = leaveRecords.length;
-  const leaveDatesArray = leaveRecords.map(r => r.date).sort((a, b) => new Date(a) - new Date(b));
+  const uniqueLeaveDates = new Set();
+  leaves.filter(l => l.status !== 'Rejected' && l.leaveType !== 'WFH').forEach(l => {
+    if (!l.startDate || !l.endDate) return;
+    const start = new Date(l.startDate);
+    const end = new Date(l.endDate);
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      if (d.getDay() === 0) continue; // skip sundays
+      const dateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(d);
+      const dObj = new Date(dateStr);
+      const now = new Date();
+      if (dObj.getMonth() === now.getMonth() && dObj.getFullYear() === now.getFullYear()) {
+        uniqueLeaveDates.add(dateStr);
+      }
+    }
+  });
+
+  const numberOfLeaves = uniqueLeaveDates.size;
+  const leaveDatesArray = Array.from(uniqueLeaveDates).sort((a, b) => new Date(a) - new Date(b));
   const leaveTooltipText = leaveDatesArray.length > 0
     ? "Leave Dates:\n" + leaveDatesArray.map(dateStr => new Date(dateStr).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' })).join('\n')
     : "No leave days this month";
@@ -324,7 +342,7 @@ export default function Attendance({ user }) {
               </div>
             </div>
 
-            <div className="attendance-stats-row" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+            <div className="attendance-stats-row">
               <div className="attendance-stat-card" title={overtimeTooltipText} style={{ cursor: 'pointer' }}>
                 <div className="attendance-stat-title">
                   <Clock size={16} /> Total Overtime
