@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Sidebar, ChatPanel } from '../../../components/UserLayout/LayoutComponents';
-import { Clock, Calendar, CheckCircle, LogOut, LogIn, Home,Activity, RefreshCw } from 'lucide-react';
+import { Clock, Calendar, CheckCircle, LogOut, LogIn, Home, Activity, RefreshCw } from 'lucide-react';
 import axios from '../../../config/axiosConfig';
 import { toast } from 'react-toastify';
 import '../Tasks/Tasks.css'; // Reusing general layout styles
@@ -197,7 +197,7 @@ export default function Attendance({ user }) {
       else if (typeof t.deadline === 'object' && t.deadline._seconds !== undefined) {
         deadlineStr = new Date(t.deadline._seconds * 1000).toISOString().split('T')[0];
       } else {
-        try { deadlineStr = new Date(t.deadline).toISOString().split('T')[0]; } catch(e) {}
+        try { deadlineStr = new Date(t.deadline).toISOString().split('T')[0]; } catch (e) { }
       }
     }
     if (!deadlineStr) return false;
@@ -218,10 +218,10 @@ export default function Attendance({ user }) {
 
   const numberOfWFH = uniqueWFHDates.size;
   const wfhDatesArray = Array.from(uniqueWFHDates).sort((a, b) => new Date(a) - new Date(b));
-  const wfhTooltipText = wfhDatesArray.length > 0 
+  const wfhTooltipText = wfhDatesArray.length > 0
     ? "WFH Dates:\n" + wfhDatesArray.map(dateStr => new Date(dateStr).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' })).join('\n')
     : "No WFH days this month";
-  
+
   const workedDays = currentMonthRecords.filter(r => r.totalHours > 0 || r.clockIn).length;
   const avgHours = workedDays > 0 ? (currentMonthRecords.reduce((acc, curr) => acc + (curr.totalHours || 0), 0) / workedDays).toFixed(1) : '0.0';
   const presentRecords = currentMonthRecords.filter(r => r.totalHours > 0 || r.clockIn || r.status === 'Present');

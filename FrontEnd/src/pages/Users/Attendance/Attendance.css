@@ -372,3 +372,285 @@
     padding: 1.5rem 1rem;
   }
 }
+
+/* ==========================================================================
+   HISTORY UPGRADE STYLES
+   ========================================================================== */
+
+.attendance-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.attendance-history-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.attendance-filter-input,
+.attendance-filter-select,
+.attendance-search-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color, var(--border-light));
+  border-radius: 8px;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.attendance-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.attendance-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--text-muted);
+}
+
+.attendance-search-input {
+  padding-left: 2.25rem;
+  width: 200px;
+}
+
+.attendance-export-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.attendance-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color, var(--border-light));
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.attendance-export-btn:hover {
+  background: var(--bg-color);
+}
+
+.attendance-export-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 0.5rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color, var(--border-light));
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  z-index: 20;
+  min-width: 150px;
+  overflow: hidden;
+}
+
+.attendance-export-dropdown:hover .attendance-export-menu,
+.attendance-export-menu:hover {
+  display: block;
+}
+
+.attendance-export-menu button {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.attendance-export-menu button:hover {
+  background: var(--bg-color);
+}
+
+.clickable-row {
+  transition: background-color 0.2s;
+}
+.clickable-row:hover {
+  background-color: var(--bg-color);
+}
+
+/* Modal Styles */
+.attendance-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+}
+
+.attendance-modal-content {
+  background: var(--panel-bg);
+  width: 90%;
+  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  animation: modalIn 0.3s ease;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.attendance-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color, var(--border-light));
+}
+
+.attendance-modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.attendance-modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+.attendance-modal-close:hover {
+  background: var(--bg-color);
+  color: var(--text-primary);
+}
+
+.attendance-modal-body {
+  padding: 1.5rem;
+}
+
+.attendance-detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color, var(--border-light));
+}
+.attendance-detail-item:last-of-type {
+  border-bottom: none;
+  margin-bottom: 1.5rem;
+}
+
+.attendance-detail-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.attendance-detail-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.attendance-btn-request-correction {
+  width: 100%;
+  padding: 0.75rem;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+.attendance-btn-request-correction:hover {
+  background: #d97706;
+}
+
+.attendance-correction-form {
+  background: var(--bg-color);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  border: 1px solid var(--border-color, var(--border-light));
+}
+
+.attendance-correction-form h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.attendance-form-group {
+  margin-bottom: 1rem;
+}
+.attendance-form-group label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+.attendance-form-group input,
+.attendance-form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color, var(--border-light));
+  border-radius: 4px;
+  background: var(--panel-bg);
+  color: var(--text-primary);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.attendance-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.attendance-btn-cancel {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border-color, var(--border-light));
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+.attendance-btn-submit {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .attendance-history-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .attendance-search-input {
+    width: 100%;
+  }
+  .attendance-export-dropdown {
+    width: 100%;
+  }
+  .attendance-export-btn {
+    justify-content: center;
+  }
+}
