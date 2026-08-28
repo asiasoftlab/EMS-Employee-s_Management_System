@@ -15,7 +15,6 @@ export default function Attendance({ user }) {
   const [actionLoading, setActionLoading] = useState(false);
   const [todayRecord, setTodayRecord] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-
   const todayDateObj = new Date();
   const monthStr = String(todayDateObj.getMonth() + 1).padStart(2, '0');
   const dayStr = String(todayDateObj.getDate()).padStart(2, '0');
@@ -33,7 +32,6 @@ export default function Attendance({ user }) {
   const getLiveDuration = (clockIn) => {
     if (!clockIn) return '0h 0m 0s';
     const clockInDate = new Date(clockIn);
-
     const diffMs = Math.max(0, currentTime - clockInDate);
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
@@ -44,7 +42,6 @@ export default function Attendance({ user }) {
   const getLiveOvertime = (clockIn) => {
     if (!clockIn) return '0h 0m 0s';
     const clockInDate = new Date(clockIn);
-
     const diffMs = Math.max(0, currentTime - clockInDate);
     const hours = diffMs / (1000 * 60 * 60);
     if (hours > 7.5) {
@@ -221,12 +218,10 @@ export default function Attendance({ user }) {
   const wfhTooltipText = wfhDatesArray.length > 0
     ? "WFH Dates:\n" + wfhDatesArray.map(dateStr => new Date(dateStr).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' })).join('\n')
     : "No WFH days this month";
-
   const workedDays = currentMonthRecords.filter(r => r.totalHours > 0 || r.clockIn).length;
   const avgHours = workedDays > 0 ? (currentMonthRecords.reduce((acc, curr) => acc + (curr.totalHours || 0), 0) / workedDays).toFixed(1) : '0.0';
   const presentRecords = currentMonthRecords.filter(r => r.totalHours > 0 || r.clockIn || r.status === 'Present');
   const totalDaysPresent = presentRecords.length;
-
   const presentDatesArray = presentRecords.map(r => r.date).sort((a, b) => new Date(a) - new Date(b));
   const presentTooltipText = presentDatesArray.length > 0
     ? "Present Dates:\n" + presentDatesArray.map(dateStr => new Date(dateStr).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' })).join('\n')
