@@ -3,6 +3,23 @@ import { db } from '../config/db.js';
 
 const router = express.Router();
 
+router.get('/meta/all', async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ message: 'Database not initialized' });
+    }
+    const snapshot = await db.collection('chats').get();
+    const meta = {};
+    snapshot.forEach(doc => {
+      meta[doc.id] = doc.data();
+    });
+    res.json(meta);
+  } catch (error) {
+    console.error('Error fetching chat meta:', error);
+    res.status(500).json({ message: 'Failed to fetch chat meta' });
+  }
+});
+
 router.get('/:roomId/messages', async (req, res) => {
   try {
     const { roomId } = req.params;

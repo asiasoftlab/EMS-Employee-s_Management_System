@@ -95,6 +95,9 @@ export default function AdminDashboard({ user }) {
   const [adminLeaves, setAdminLeaves] = useState([]);
   const [leavesLoading, setLeavesLoading] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  
+  // Chat Metadata (Unread Counts)
+  const [chatMetaMap, setChatMetaMap] = useState({});
 
   const getEmployeeStatus = (emp) => {
     const today = new Date();
@@ -354,6 +357,11 @@ export default function AdminDashboard({ user }) {
     fetchEmployees();
     fetchAllTasksSummary();
     fetchLeavesAdmin();
+    
+    // Fetch initial chat metadata for unread counts
+    axios.get('/api/chat/meta/all')
+      .then(res => setChatMetaMap(res.data || {}))
+      .catch(err => console.error('Failed to load chat meta:', err));
   }, []);
 
   useEffect(() => {
@@ -366,10 +374,19 @@ export default function AdminDashboard({ user }) {
       }
     };
 
+    const handleUnreadUpdate = ({ employeeId, unreadCount }) => {
+      setChatMetaMap(prev => ({
+        ...prev,
+        [employeeId]: { ...prev[employeeId], adminUnreadCount: unreadCount }
+      }));
+    };
+
     socket.on('task_updated', handleTaskUpdated);
+    socket.on('unread_count_update', handleUnreadUpdate);
 
     return () => {
       socket.off('task_updated', handleTaskUpdated);
+      socket.off('unread_count_update', handleUnreadUpdate);
       socket.disconnect(); // Disconnect only when the entire dashboard unmounts
     };
   }, [selectedEmp, fetchEmpData]); // Re-bind when selectedEmp changes so fetchEmpData uses the right emp
@@ -402,6 +419,17 @@ export default function AdminDashboard({ user }) {
       // DO NOT disconnect socket here, as we still want task updates!
     };
   }, [showChatModal, selectedEmp]);
+
+  // Mark messages as read when opening chat or receiving new messages while open
+  useEffect(() => {
+    if (showChatModal && selectedEmp && chatMetaMap[selectedEmp._id]?.adminUnreadCount > 0) {
+      socket.emit('mark_chat_read', selectedEmp._id);
+      setChatMetaMap(prev => ({
+        ...prev,
+        [selectedEmp._id]: { ...prev[selectedEmp._id], adminUnreadCount: 0 }
+      }));
+    }
+  }, [showChatModal, selectedEmp, chatMetaMap]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -606,7 +634,14 @@ export default function AdminDashboard({ user }) {
                         <span className={`emp-card-status-dot dot-${statusClass}`} title={status}></span>
                       </div>
                       <div className="emp-card-info">
-                        <span className="emp-card-name">{emp.name}</span>
+                        <span className="emp-card-name" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {emp.name}
+                          {chatMetaMap[emp._id]?.adminUnreadCount > 0 && (
+                            <span style={{ background: '#ef4444', color: 'white', borderRadius: '50%', padding: '1px 5px', fontSize: '10px', fontWeight: 'bold' }}>
+                              {chatMetaMap[emp._id].adminUnreadCount}
+                            </span>
+                          )}
+                        </span>
                         <span className="emp-card-dept flex items-center gap-2 flex-wrap">
                           <span className="flex items-center gap-1">
                             <Briefcase size={11} className="inline-icon" />
@@ -788,9 +823,14 @@ export default function AdminDashboard({ user }) {
                 <span className="tasks-count-badge">{empTasksLoading ? '…' : empTasks.length} tasks</span>
               </div>
               <div className="tasks-header-actions">
-                <button className="chat-with-btn" title={`Send Notification to ${selectedEmp.name}`} onClick={() => setShowChatModal(true)}>
+                <button className="chat-with-btn" title={`Send Notification to ${selectedEmp.name}`} onClick={() => setShowChatModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
                   <MessageSquare size={14} className="inline-icon" />
                   Chat
+                  {chatMetaMap[selectedEmp._id]?.adminUnreadCount > 0 && (
+                    <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '10px', fontWeight: 'bold' }}>
+                      {chatMetaMap[selectedEmp._id].adminUnreadCount}
+                    </span>
+                  )}
                 </button>
                 <button className="tasks-close-btn" onClick={() => { setSelectedEmp(null); setEmpTasks([]); setEmpAttendance([]); }} title="Close">
                   <X size={16} />

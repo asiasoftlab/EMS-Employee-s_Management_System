@@ -21,6 +21,16 @@ export const initializeSocket = (server) => {
       console.log(`Socket ${socket.id} joined room ${roomId}`);
     });
 
+    socket.on('mark_chat_read', async (roomId) => {
+      if (!roomId || !db) return;
+      try {
+        await db.collection('chats').doc(roomId).set({ adminUnreadCount: 0 }, { merge: true });
+        ioInstance.emit('unread_count_update', { employeeId: roomId, unreadCount: 0 });
+      } catch (err) {
+        console.error('Error marking chat read:', err);
+      }
+    });
+
     socket.on('send_message', async (data) => {
       // data should contain: roomId, text, senderId, senderName, senderRole
       const { roomId, text, senderId, senderName, senderRole } = data;
@@ -44,6 +54,8 @@ export const initializeSocket = (server) => {
           // Also update the chat metadata
           const metaRef = db.collection('chats').doc(roomId);
           const metaSnap = await metaRef.get();
+          let newUnreadCount = 1;
+          
           if (!metaSnap.exists && senderRole === 'employee') {
             await metaRef.set({
               employeeId: senderId,
@@ -51,9 +63,18 @@ export const initializeSocket = (server) => {
               employeeEmail: data.senderEmail || '',
               lastMessage: text,
               updatedAt: FieldValue.serverTimestamp(),
+              adminUnreadCount: 1
             });
           } else {
-            await metaRef.set({ lastMessage: text, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+            const updateData = { lastMessage: text, updatedAt: FieldValue.serverTimestamp() };
+            if (senderRole === 'employee') {
+              updateData.adminUnreadCount = FieldValue.increment(1);
+            }
+            await metaRef.set(updateData, { merge: true });
+            if (senderRole === 'employee') {
+              const updatedSnap = await metaRef.get();
+              newUnreadCount = updatedSnap.data().adminUnreadCount || 1;
+            }
           }
 
           // Attach the real timestamp for broadcasting
@@ -66,6 +87,10 @@ export const initializeSocket = (server) => {
 
         // Broadcast to room
         ioInstance.to(roomId).emit('receive_message', msgData);
+
+        if (db && senderRole === 'employee') {
+          ioInstance.emit('unread_count_update', { employeeId: senderId, unreadCount: newUnreadCount });
+        }
       } catch (err) {
         console.error('Socket message error:', err);
       }
