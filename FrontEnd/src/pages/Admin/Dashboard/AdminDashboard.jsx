@@ -8,6 +8,8 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import './AdminDashboard.css';
+import { importantDays, companyHolidays } from '../../../utils/importantDays';
+
 
 const formatDate = (ts) => {
   if (!ts) return '—';
@@ -63,6 +65,12 @@ const LiveWorkingHours = ({ todayHours = 0, totalHours = 0, currentClockIn, clas
 export default function AdminDashboard({ user }) {
   const navigate = useNavigate();
 
+  const todayDateObj = new Date();
+  const monthStr = String(todayDateObj.getMonth() + 1).padStart(2, '0');
+  const dayStr = String(todayDateObj.getDate()).padStart(2, '0');
+  const todayKey = `${monthStr}-${dayStr}`;
+  const todayEvent = importantDays[todayKey] || companyHolidays[todayKey];
+
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -95,7 +103,7 @@ export default function AdminDashboard({ user }) {
   const [adminLeaves, setAdminLeaves] = useState([]);
   const [leavesLoading, setLeavesLoading] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
-  
+
   // Chat Metadata (Unread Counts)
   const [chatMetaMap, setChatMetaMap] = useState({});
 
@@ -357,7 +365,7 @@ export default function AdminDashboard({ user }) {
     fetchEmployees();
     fetchAllTasksSummary();
     fetchLeavesAdmin();
-    
+
     // Fetch initial chat metadata for unread counts
     axios.get('/api/chat/meta/all')
       .then(res => setChatMetaMap(res.data || {}))
@@ -688,8 +696,13 @@ export default function AdminDashboard({ user }) {
               )}
             </div>
             <div>
-              <h3>Asia Softlab Employee's</h3>
-              <p>{user.email}</p>
+              <h3 style={{ margin: 0 }}>Asia Softlab Employee's</h3>
+              <p style={{ margin: 0 }}>{user.email}</p>
+              {todayEvent && (
+                <p style={{ margin: '0.25rem 0 0', fontWeight: '600', color: '#10b981', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                 Today : {todayEvent}
+                </p>
+              )}
             </div>
           </div>
           <div className="header-actions">
